@@ -1,29 +1,69 @@
 ---
 import Base from "~/layouts/Base.astro";
+import { getAllPaintings, getSiteSettings } from "~/lib/queries";
+import { urlFor } from "~/lib/sanity";
+
+const [paintings, settings] = await Promise.all([
+  getAllPaintings(),
+  getSiteSettings(),
+]);
+
+const artistName = settings?.artistName || "Vitaly Leshukov";
 ---
 
 <Base>
-  <main class="min-h-screen flex flex-col justify-between p-8 md:p-16">
+  <main class="min-h-screen flex flex-col p-8 md:p-16">
     <header class="flex justify-between items-baseline">
       <span class="font-sans text-sm tracking-widest uppercase">Vitality Art</span>
-      <span class="font-sans text-sm text-ink/60">Est. 2026</span>
+      <span class="font-sans text-sm text-ink/60">Phase 2 — CMS</span>
     </header>
 
-    <section class="py-24 md:py-32">
+    <section class="py-16 md:py-24">
       <p class="font-sans text-sm tracking-widest uppercase text-ink/60 mb-6">
-        Phase 1 — Scaffold
+        Connected to Sanity
       </p>
-      <h1 class="font-display tracking-display text-[15vw] leading-[0.9] uppercase">
-        Hello,<br />Vitaly
+      <h1 class="font-display tracking-display text-[12vw] md:text-[10vw] leading-[0.9] uppercase">
+        {artistName}
       </h1>
       <p class="font-sans mt-8 max-w-xl text-lg text-ink/80">
-        A new home for the work of Vitaly Leshukov. Built quietly, in two tones —
-        bone and ink — so the paintings carry the color.
+        {paintings.length} painting{paintings.length === 1 ? "" : "s"} loaded from the CMS.
+        {settings ? "Site settings loaded." : "Site settings not yet created."}
       </p>
     </section>
 
-    <footer class="flex justify-between items-baseline text-sm text-ink/60">
-      <span class="font-sans">Type check: Tanker + General Sans</span>
+    {paintings.length > 0 && (
+      <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {paintings.slice(0, 8).map((p) => (
+          <figure class="group">
+            <div class="aspect-[4/5] overflow-hidden bg-ink/5">
+              <img
+                src={urlFor(p.image).width(800).quality(80).url()}
+                alt={p.title}
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                loading="lazy"
+              />
+            </div>
+            <figcaption class="mt-3 font-sans text-sm">
+              <span class="block">{p.title}</span>
+              {p.year && <span class="block text-ink/60">{p.year}</span>}
+              {p.sold && <span class="block text-ink/60 uppercase tracking-wider text-xs mt-1">Sold</span>}
+            </figcaption>
+          </figure>
+        ))}
+      </section>
+    )}
+
+    {paintings.length === 0 && (
+      <section class="py-12 border-t border-ink/10">
+        <p class="font-sans text-ink/60 max-w-xl">
+          No paintings yet. Open the Studio, add a painting, and refresh this page.
+          The CMS pipeline is wired and ready.
+        </p>
+      </section>
+    )}
+
+    <footer class="mt-auto pt-16 flex justify-between items-baseline text-sm text-ink/60">
+      <span class="font-sans">Sanity · {paintings.length} works</span>
       <span class="font-sans">vitalityart.es</span>
     </footer>
   </main>
