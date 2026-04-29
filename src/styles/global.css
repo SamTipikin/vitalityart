@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand colors */
+  --color-bone: #FAFAFA;
+  --color-ink: #1B2330;
+  --color-paper: #FFFFFF;
+  --color-pitch: #000000;
+
+  /* Brand fonts */
+  --font-display: "Tanker", sans-serif;
+  --font-sans: "General Sans", system-ui, sans-serif;
+
+  /* Display type scale — Tanker holds up huge */
+  --text-display-sm: 3.5rem;    /* 56px */
+  --text-display-md: 4.5rem;    /* 72px */
+  --text-display-lg: 6rem;      /* 96px */
+  --text-display-xl: 8rem;      /* 128px */
+  --text-display-2xl: 10rem;    /* 160px */
+}
+
+@layer base {
+  html {
+    background-color: var(--color-bone);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-size: 1rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-bone);
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility tracking-display {
+  letter-spacing: -0.02em;
+}
