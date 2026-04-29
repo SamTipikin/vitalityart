@@ -1,45 +1,48 @@
 ---
-// Variant F — "The Panel" (colorless, multi-line headline)
-// Single bone panel. Painting fills the left. Right column carries
-// a 5-line stacked Tanker headline (the pull quote, broken),
-// pagination column, and an ink-bordered CTA pill.
+// Variant F — locked direction. Now extended into a full home-page skeleton
+// so we can see the editorial flow: Hero → Origins → Featured → Exhibitions → Contact → Footer.
+// Each section below the hero is a structural placeholder we'll iterate on next.
 import Base from "~/layouts/Base.astro";
-import { paintings, artist } from "~/playground/_placeholders";
+import { paintings, artist, exhibitions } from "~/playground/_placeholders";
 
 const featured = paintings.slice(0, 4);
 const feature = featured[0];
-
-// 5-line stacked headline — short, declarative, broken for typographic rhythm.
-const headlineLines = ["AFTER", "THE COMA", "THE ONLY", "THING LEFT", "WAS COLOR"];
+const featuredGrid = paintings.slice(0, 6);
 ---
 
-<Base title="Vitaly Leshukov — Hero Variant F">
-  <main class="min-h-[100dvh] bg-bone text-ink">
-    <!-- Top nav -->
+<Base
+  title="Vitaly Leshukov — Painter"
+  description="Vitaly Leshukov is a Spanish-based contemporary painter. Oil on canvas. Exhibited in Taipei, Dubai, Bordeaux, Lausanne, Tokyo."
+>
+  <main class="bg-bone text-ink">
+    <!-- ============================================================ -->
+    <!-- 01 · NAV                                                      -->
+    <!-- ============================================================ -->
     <header class="px-6 md:px-10 py-6 flex items-baseline justify-between border-b border-ink/10">
-      <span class="font-display text-xl tracking-display uppercase">VL</span>
+      <a href="/" class="font-display text-xl tracking-display uppercase">Vitaly Leshukov</a>
       <nav class="flex gap-6 md:gap-10 text-[11px] tracking-[0.2em] uppercase">
-        <a href="/" class="hover:opacity-60 transition-opacity duration-500">Origins</a>
-        <a href="/gallery" class="hover:opacity-60 transition-opacity duration-500">Gallery</a>
+        <a href="#origins" class="hover:opacity-60 transition-opacity duration-500">Origins</a>
+        <a href="#works" class="hover:opacity-60 transition-opacity duration-500">Works</a>
         <a href="#exhibitions" class="hover:opacity-60 transition-opacity duration-500">Exhibitions</a>
         <a href="#contact" class="hover:opacity-60 transition-opacity duration-500">Contact</a>
       </nav>
     </header>
 
-    <!-- Hero panel -->
-    <section class="px-4 md:px-10 pt-6 md:pt-10 pb-10 md:pb-14">
+    <!-- ============================================================ -->
+    <!-- 02 · HERO                                                     -->
+    <!-- ============================================================ -->
+    <section class="px-4 md:px-10 pt-6 md:pt-10 pb-10 md:pb-16">
       <div class="grid grid-cols-12 gap-4 md:gap-10 items-stretch">
-        <!-- Feature painting fills the left -->
+        <!-- Feature painting -->
         <figure class="col-span-12 md:col-span-7">
           <div class="aspect-[4/5] md:aspect-[5/6] overflow-hidden bg-ink/[0.04]">
             <img
               src={feature.image}
-              alt={feature.title}
+              alt={`${feature.title}, oil on canvas, by Vitaly Leshukov`}
               class="w-full h-full object-cover"
               fetchpriority="high"
             />
           </div>
-          <!-- Caption row -->
           <div class="mt-3 md:mt-4 flex items-baseline justify-between text-[11px] tracking-[0.2em] uppercase text-ink/65">
             <span>{feature.title}</span>
             <span class="hidden md:inline">{feature.year}</span>
@@ -48,24 +51,22 @@ const headlineLines = ["AFTER", "THE COMA", "THE ONLY", "THING LEFT", "WAS COLOR
         </figure>
 
         <!-- Right column -->
-        <div class="col-span-12 md:col-span-5 relative flex flex-col justify-between min-h-[460px] md:min-h-0 md:py-2">
-          <!-- Eyebrow wordmark -->
+        <div class="col-span-12 md:col-span-5 relative flex flex-col justify-between min-h-[520px] md:min-h-0 md:py-2">
+          <!-- Eyebrow -->
           <div class="flex items-center gap-3">
             <span class="block w-6 h-px bg-ink"></span>
-            <span class="text-[11px] tracking-[0.2em] uppercase opacity-80">Painter · Spain</span>
+            <span class="text-[11px] tracking-[0.2em] uppercase opacity-80">Painter · Spain · est. 2018</span>
           </div>
 
-          <!-- 5-line stacked headline -->
-          <h1 class="font-display tracking-[-0.02em] uppercase leading-[0.86] text-[14vw] md:text-[5.6vw] lg:text-[5vw] mt-10 md:mt-0 text-balance">
-            {headlineLines.map((line) => (
-              <span class="block">{line}</span>
-            ))}
+          <!-- H1: name first (SEO), then divider, then pull quote -->
+          <h1 class="font-display tracking-[-0.02em] uppercase leading-[0.86] mt-10 md:mt-0">
+            <span class="block text-[14vw] md:text-[5.6vw] lg:text-[5vw]">Vitaly</span>
+            <span class="block text-[14vw] md:text-[5.6vw] lg:text-[5vw]">Leshukov</span>
+            <span class="block w-12 h-px bg-ink/40 my-5 md:my-6" aria-hidden="true"></span>
+            <span class="block text-[7vw] md:text-[2.4vw] leading-[1.1] text-ink/80">
+              After the coma,<br />the only thing left<br />was color.
+            </span>
           </h1>
-
-          <!-- Attribution -->
-          <p class="mt-6 text-[11px] tracking-[0.2em] uppercase text-ink/65">
-            — {artist.name}
-          </p>
 
           <!-- Pagination column, right edge -->
           <ol class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 flex-col gap-3 text-[11px] tracking-[0.2em] uppercase items-center">
@@ -80,7 +81,7 @@ const headlineLines = ["AFTER", "THE COMA", "THE ONLY", "THING LEFT", "WAS COLOR
           <!-- CTA pill -->
           <div class="mt-12 md:mt-14 flex">
             <a
-              href="/gallery"
+              href="#works"
               class="group inline-flex items-center gap-3 border border-ink rounded-full pl-5 pr-2 py-2 text-[11px] tracking-[0.2em] uppercase transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:translate-y-[-2px] active:scale-[0.98]"
             >
               <span>See the work</span>
@@ -91,16 +92,147 @@ const headlineLines = ["AFTER", "THE COMA", "THE ONLY", "THING LEFT", "WAS COLOR
       </div>
     </section>
 
-    <!-- Bio strip -->
-    <section class="border-t border-ink/10 px-6 md:px-10 py-20 md:py-28">
+    <!-- ============================================================ -->
+    <!-- 03 · ORIGINS (long-form bio, editorial article style)         -->
+    <!-- ============================================================ -->
+    <section id="origins" class="border-t border-ink/15 px-6 md:px-10 py-24 md:py-40">
       <div class="mx-auto max-w-[1200px] grid grid-cols-12 gap-6 md:gap-10">
-        <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
-          Origins
+        <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60 md:sticky md:top-8 md:self-start">
+          A 01 — Origins
         </span>
-        <p class="col-span-12 md:col-span-9 text-[15px] md:text-base leading-[1.7] text-ink/85 max-w-2xl">
-          {artist.bioShort}
-        </p>
+        <div class="col-span-12 md:col-span-8 md:col-start-4">
+          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] max-w-[14ch]">
+            From the<br />Urals to oil<br />on canvas
+          </h2>
+          <div class="mt-10 md:mt-14 text-[16px] md:text-[18px] leading-[1.7] text-ink/85 max-w-2xl space-y-5">
+            <p class="first-letter:font-display first-letter:text-7xl first-letter:float-left first-letter:leading-[0.9] first-letter:mr-3 first-letter:mt-1 first-letter:uppercase">
+              {artist.bioShort}
+            </p>
+            <p class="text-ink/55 italic">
+              [Placeholder. Long-form bio expands here — coma story, return to painting,
+              the move to Spain, the language of color. Will be a 3-4 paragraph article
+              loaded from Sanity site settings.]
+            </p>
+          </div>
+        </div>
       </div>
     </section>
+
+    <!-- ============================================================ -->
+    <!-- 04 · FEATURED WORKS                                           -->
+    <!-- ============================================================ -->
+    <section id="works" class="border-t border-ink/15 px-6 md:px-10 py-24 md:py-40">
+      <div class="mx-auto max-w-[1400px]">
+        <div class="grid grid-cols-12 gap-6 md:gap-10 items-end mb-12 md:mb-20">
+          <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+            A 02 — Featured Works
+          </span>
+          <h2 class="col-span-12 md:col-span-7 font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92]">
+            Recent<br />paintings
+          </h2>
+          <a
+            href="/gallery"
+            class="col-span-12 md:col-span-2 text-[11px] tracking-[0.2em] uppercase border-b border-ink pb-1 hover:opacity-60 transition-opacity duration-500 self-start"
+          >
+            See all 55 →
+          </a>
+        </div>
+
+        <!-- Asymmetric editorial grid — alternates landscape/portrait, varies size -->
+        <div class="grid grid-cols-12 gap-4 md:gap-6">
+          {featuredGrid.map((p, i) => {
+            // Vary span and aspect to break monotony
+            const span = i === 0 ? "md:col-span-7" : i === 1 ? "md:col-span-5" : i === 2 ? "md:col-span-4" : i === 3 ? "md:col-span-8" : i === 4 ? "md:col-span-5" : "md:col-span-7";
+            const offset = i === 4 ? "md:mt-16" : i === 3 ? "md:mt-24" : i === 5 ? "md:mt-8" : "";
+            return (
+              <a href={`/gallery/${p.title.toLowerCase().replace(/\s+/g, "-")}`} class={`col-span-12 ${span} ${offset} group`}>
+                <div class="aspect-[4/5] overflow-hidden bg-ink/[0.04]">
+                  <img
+                    src={p.image}
+                    alt={p.title}
+                    class="w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.025]"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="mt-3 flex items-baseline justify-between text-[11px] tracking-[0.2em] uppercase text-ink/65">
+                  <span>{p.title}</span>
+                  <span class="flex gap-3">
+                    <span>{p.year}</span>
+                    {p.sold && <span class="text-ink">— Sold</span>}
+                  </span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 05 · EXHIBITIONS                                              -->
+    <!-- ============================================================ -->
+    <section id="exhibitions" class="border-t border-ink/15 px-6 md:px-10 py-24 md:py-40">
+      <div class="mx-auto max-w-[1200px] grid grid-cols-12 gap-6 md:gap-10">
+        <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60 md:sticky md:top-8 md:self-start">
+          A 03 — Exhibitions
+        </span>
+        <div class="col-span-12 md:col-span-9">
+          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] mb-12 md:mb-16">
+            Shown at
+          </h2>
+          <ol class="border-t border-ink/15">
+            {exhibitions.slice(0, 6).map((e) => (
+              <li class="grid grid-cols-12 gap-4 md:gap-6 py-5 md:py-7 border-b border-ink/15 hover:bg-ink/[0.02] transition-colors duration-500">
+                <span class="col-span-2 md:col-span-1 font-display text-2xl md:text-3xl tracking-display">{e.year}</span>
+                <span class="col-span-10 md:col-span-7 text-[15px] md:text-lg">{e.title}</span>
+                <span class="col-span-6 md:col-span-2 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center">{e.type}</span>
+                <span class="col-span-6 md:col-span-2 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-right">{e.city}</span>
+              </li>
+            ))}
+          </ol>
+          <a
+            href="#"
+            class="inline-block mt-8 text-[11px] tracking-[0.2em] uppercase border-b border-ink pb-1 hover:opacity-60 transition-opacity duration-500"
+          >
+            Full exhibition history →
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 06 · CONTACT                                                  -->
+    <!-- ============================================================ -->
+    <section id="contact" class="border-t border-ink/15 px-6 md:px-10 py-24 md:py-40">
+      <div class="mx-auto max-w-[1200px] grid grid-cols-12 gap-6 md:gap-10">
+        <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+          A 04 — Contact
+        </span>
+        <div class="col-span-12 md:col-span-9">
+          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] max-w-[12ch]">
+            Acquire<br />or commission
+          </h2>
+          <p class="mt-8 max-w-xl text-[16px] md:text-[18px] leading-[1.7] text-ink/80">
+            Vitaly accepts a small number of commissions each year and works directly
+            with galleries and private collectors. Write below — every message is
+            read and replied to.
+          </p>
+          <p class="mt-12 text-ink/55 italic">[Placeholder. Web3Forms-backed form goes here in Phase 5.]</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- 07 · FOOTER                                                   -->
+    <!-- ============================================================ -->
+    <footer class="border-t border-ink/15 px-6 md:px-10 py-12 md:py-16 grid grid-cols-12 gap-6 md:gap-10 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+      <span class="col-span-12 md:col-span-4">© Vitaly Leshukov · 2026</span>
+      <div class="col-span-6 md:col-span-4 flex flex-col md:flex-row gap-3 md:gap-6">
+        <a href="#" class="hover:text-ink transition-colors duration-500">Instagram</a>
+        <a href="#" class="hover:text-ink transition-colors duration-500">Facebook</a>
+        <a href="#" class="hover:text-ink transition-colors duration-500">TikTok</a>
+      </div>
+      <span class="col-span-6 md:col-span-4 text-right">vitalityart.es</span>
+    </footer>
   </main>
 </Base>
