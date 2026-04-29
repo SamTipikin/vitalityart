@@ -1,11 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors */
+  /* Brand colors — base */
   --color-bone: #FAFAFA;
   --color-ink: #1B2330;
   --color-paper: #FFFFFF;
   --color-pitch: #000000;
+
+  /* Accent colors — pulled from Vitaly's palette */
+  --color-saffron: #E8B349;   /* dream-gold, warm museum */
+  --color-koi: #C8472D;       /* painted red, blood-of-the-fish */
+  --color-iris: #3B5266;      /* muted painted blue */
+  --color-lime: #D6E66A;      /* contemporary punch */
 
   /* Brand fonts */
   --font-display: "Tanker", sans-serif;
