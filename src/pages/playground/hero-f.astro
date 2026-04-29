@@ -1,0 +1,105 @@
+---
+// Variant F — "The Panel"
+// Faithful to Sam's reference. No backdrop. The whole hero is a single
+// colored panel: feature painting fills the left, type stack and
+// pagination + CTA pill fill the right. Bio falls below in scroll.
+import Base from "~/layouts/Base.astro";
+import { paintings, artist } from "~/playground/_placeholders";
+
+const featured = paintings.slice(0, 4);
+const feature = featured[0];
+---
+
+<Base title="Vitaly Leshukov — Hero Variant F">
+  <main class="min-h-[100dvh] bg-lime text-ink">
+    <!-- Top nav, sits inside the panel -->
+    <header class="px-6 md:px-10 py-6 flex items-baseline justify-between">
+      <span class="font-display text-xl tracking-display uppercase">VL</span>
+      <nav class="flex gap-6 md:gap-10 text-[11px] tracking-[0.2em] uppercase">
+        <a href="/" class="hover:opacity-60 transition-opacity duration-500">Origins</a>
+        <a href="/gallery" class="hover:opacity-60 transition-opacity duration-500">Gallery</a>
+        <a href="#exhibitions" class="hover:opacity-60 transition-opacity duration-500">Exhibitions</a>
+        <a href="#contact" class="hover:opacity-60 transition-opacity duration-500">Contact</a>
+      </nav>
+    </header>
+
+    <!-- Hero panel -->
+    <section class="px-4 md:px-10 pb-10 md:pb-14">
+      <div class="grid grid-cols-12 gap-4 md:gap-10 items-stretch">
+        <!-- Feature painting fills the left -->
+        <figure class="col-span-12 md:col-span-7 lg:col-span-7">
+          <div class="aspect-[4/5] md:aspect-[5/6] overflow-hidden rounded-[20px] md:rounded-[28px] bg-ink/10">
+            <img
+              src={feature.image}
+              alt={feature.title}
+              class="w-full h-full object-cover"
+              fetchpriority="high"
+            />
+          </div>
+        </figure>
+
+        <!-- Right column: wordmark / headline / pagination / CTA -->
+        <div class="col-span-12 md:col-span-5 relative flex flex-col justify-between min-h-[420px] md:min-h-0 md:py-6">
+          <!-- Eyebrow wordmark -->
+          <div class="flex justify-center md:justify-start">
+            <span class="font-display text-base tracking-display uppercase opacity-80">Vitality Art</span>
+          </div>
+
+          <!-- Massive headline -->
+          <h1 class="font-display tracking-display uppercase leading-[0.92] text-center md:text-left text-[14vw] md:text-[5.6vw] lg:text-[4.8vw] mt-10 md:mt-0">
+            Vitaly<br />Leshukov
+          </h1>
+
+          <!-- Sub line / pull quote -->
+          <p class="mt-4 md:mt-6 text-center md:text-left max-w-md md:max-w-sm text-[15px] md:text-[17px] leading-[1.45] text-ink/80 mx-auto md:mx-0">
+            Painter. Spain. {featured.length} works in this round.
+            "{artist.pullQuote}"
+          </p>
+
+          <!-- Pagination dots, absolute on the right edge of the column -->
+          <ol class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 flex-col gap-2 text-[11px] tracking-[0.2em] uppercase items-center">
+            {featured.map((_, i) => (
+              <li class={`flex flex-col items-center gap-2 ${i === 0 ? "text-ink" : "text-ink/35"}`}>
+                <span>{String(i + 1).padStart(2, "0")}</span>
+                {i < featured.length - 1 && <span class="block w-px h-3 bg-ink/30"></span>}
+              </li>
+            ))}
+          </ol>
+
+          <!-- CTA pill -->
+          <div class="mt-10 md:mt-12 flex justify-center md:justify-start">
+            <a
+              href="/gallery"
+              class="group inline-flex items-center gap-3 border border-ink rounded-full pl-5 pr-2 py-2 text-[11px] tracking-[0.2em] uppercase transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:translate-y-[-2px] active:scale-[0.98]"
+            >
+              <span>See the work</span>
+              <span class="w-7 h-7 rounded-full bg-ink text-lime grid place-items-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caption row under the painting -->
+      <div class="mt-3 md:mt-4 grid grid-cols-12 gap-4 md:gap-10 text-[11px] tracking-[0.2em] uppercase text-ink/70">
+        <span class="col-span-12 md:col-span-7">{feature.title}</span>
+        <span class="col-span-6 md:col-span-3 md:col-start-9">{feature.year}</span>
+        <span class="col-span-6 md:col-span-1 text-right">{feature.width}×{feature.height}</span>
+      </div>
+    </section>
+
+    <!-- Bio strip below the panel, switches to bone -->
+    <section class="bg-bone text-ink px-6 md:px-10 py-20 md:py-28">
+      <div class="mx-auto max-w-[1200px] grid grid-cols-12 gap-6 md:gap-10">
+        <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+          Origins
+        </span>
+        <p class="col-span-12 md:col-span-7 font-display text-[7vw] md:text-[2.4vw] leading-[1.15] tracking-display max-w-[20ch]">
+          "{artist.pullQuote}"
+        </p>
+        <p class="col-span-12 md:col-span-7 md:col-start-4 text-[15px] md:text-base leading-[1.7] text-ink/85 max-w-2xl">
+          {artist.bioShort}
+        </p>
+      </div>
+    </section>
+  </main>
+</Base>
