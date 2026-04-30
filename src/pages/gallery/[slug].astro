@@ -1,0 +1,329 @@
+---
+// /gallery/[slug] — single painting page.
+// Static paths generated from placeholder data; will swap to Sanity
+// once the CSV import lands.
+import type { GetStaticPaths } from "astro";
+import Base from "~/layouts/Base.astro";
+import { paintings, seriesSlug, type PlaceholderPainting } from "~/playground/_placeholders";
+
+export const getStaticPaths = (() => {
+  return paintings.map((p) => ({
+    params: { slug: `${seriesSlug(p.title)}-${p.year}` },
+    props: { painting: p },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props { painting: PlaceholderPainting }
+const { painting } = Astro.props;
+const p = painting;
+
+// Aspect ratio from real dimensions for accurate layout
+const aspectRatio = p.width / p.height; // > 1 = landscape
+
+// Related works in the same series, excluding the current painting
+const related = paintings
+  .filter((x) => x.series === p.series && x.title !== p.title)
+  .slice(0, 6);
+
+const priceLabel = p.sold
+  ? "Sold"
+  : p.price
+    ? `$${p.price.toLocaleString()} USD`
+    : "Contact for price";
+
+const seriesUrl = `/gallery#${seriesSlug(p.series)}`;
+
+// Description copy — the real text comes from Sanity once imported.
+const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From the ${p.series} series — part of an ongoing exploration of ${p.series.toLowerCase()} as subject and gesture.`;
+---
+
+<Base
+  title={`${p.title} — Vitaly Leshukov`}
+  description={`${p.title} (${p.year}). Oil on canvas, ${p.width}×${p.height} cm. From the ${p.series} series.`}
+>
+  <main class="bg-bone text-ink min-h-screen">
+    <!-- Floating bottom nav -->
+    <nav
+      aria-label="Primary"
+      class="fixed left-1/2 -translate-x-1/2 z-50 px-3 sm:px-2"
+      style="bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);"
+    >
+      <ul class="flex items-stretch gap-1 rounded-full bg-bone/85 backdrop-blur-xl ring-1 ring-ink/15 shadow-[0_10px_40px_-12px_rgba(27,35,48,0.25)] p-1 text-[11px] tracking-[0.2em] uppercase">
+        <li class="flex">
+          <a href="/" class="inline-flex items-center h-11 px-3 sm:px-4 rounded-full text-ink/70 hover:text-ink hover:bg-ink/[0.04] transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer">
+            Home
+          </a>
+        </li>
+        <li class="flex">
+          <a href="/gallery" class="inline-flex items-center h-11 px-3 sm:px-4 rounded-full text-ink bg-ink/[0.06] cursor-pointer">
+            Gallery
+          </a>
+        </li>
+        <li class="flex">
+          <a href="/#exhibitions" class="inline-flex items-center h-11 px-3 sm:px-4 rounded-full text-ink/70 hover:text-ink hover:bg-ink/[0.04] transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer">
+            Exhibitions
+          </a>
+        </li>
+        <li class="flex">
+          <a
+            href="/#contact"
+            class="group inline-flex items-center h-11 gap-2 pl-4 pr-1 rounded-full bg-ink text-bone hover:bg-ink/90 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
+          >
+            <span>Contact</span>
+            <span class="w-9 h-9 rounded-full bg-bone/15 grid place-items-center text-bone group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">↗</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Top breadcrumbs -->
+    <div class="px-6 md:px-12 lg:px-16 xl:px-24 pt-12 md:pt-16 pb-6">
+      <nav class="text-[11px] tracking-[0.2em] uppercase text-ink/55 flex flex-wrap items-center gap-2">
+        <a href="/gallery" class="hover:text-ink transition-colors duration-300">Gallery</a>
+        <span>/</span>
+        <a href={seriesUrl} class="hover:text-ink transition-colors duration-300">{p.series}</a>
+        <span>/</span>
+        <span class="text-ink">{p.title}</span>
+      </nav>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Hero — image + sticky metadata sidebar                       -->
+    <!-- ============================================================ -->
+    <section class="px-6 md:px-12 lg:px-16 xl:px-24 pb-24 md:pb-32">
+      <div class="grid grid-cols-12 gap-6 md:gap-12 items-start">
+        <!-- Painting -->
+        <figure class="col-span-12 lg:col-span-8 xl:col-span-9">
+          <div class="relative overflow-hidden bg-ink/[0.04]" style={`aspect-ratio: ${aspectRatio};`}>
+            <img
+              src={p.image}
+              alt={`${p.title}, oil on canvas, by Vitaly Leshukov`}
+              class="absolute inset-0 w-full h-full object-cover"
+              fetchpriority="high"
+            />
+            {p.sold && (
+              <span class="absolute top-4 right-4 md:top-6 md:right-6 px-3 py-1.5 rounded-full bg-ink text-bone text-[11px] tracking-[0.18em] uppercase">
+                Sold
+              </span>
+            )}
+          </div>
+        </figure>
+
+        <!-- Metadata sidebar -->
+        <aside class="col-span-12 lg:col-span-4 xl:col-span-3 lg:sticky lg:top-12">
+          <span class="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-3">
+            <a href={seriesUrl} class="hover:text-ink transition-colors duration-300">{p.series}</a>
+          </span>
+          <h1 class="font-display tracking-[-0.02em] uppercase leading-[0.92] text-[10vw] md:text-5xl lg:text-[3.2vw] xl:text-[2.6vw]" data-anim-h2>
+            <span class="sr-only">{p.title}</span>
+            <span class="block overflow-hidden" aria-hidden="true">
+              <span class="block anim-line" style="--i:0">{p.title}</span>
+            </span>
+          </h1>
+
+          <!-- Spec list -->
+          <dl class="mt-8 md:mt-10 border-t border-ink/15">
+            {[
+              ["Year",       String(p.year ?? "—")],
+              ["Medium",     p.medium ?? "Oil on canvas"],
+              ["Dimensions", `${p.width} × ${p.height} cm`],
+              ["Price",      priceLabel],
+            ].map(([k, v]) => (
+              <div class="grid grid-cols-12 gap-3 py-3.5 border-b border-ink/15">
+                <dt class="col-span-5 text-[11px] tracking-[0.2em] uppercase text-ink/55">{k}</dt>
+                <dd class={`col-span-7 text-[13px] tracking-[0.05em] ${k === "Price" ? "font-medium" : ""}`}>{v}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <!-- Acquire CTA -->
+          {!p.sold && (
+            <a
+              href={`/#contact?painting=${encodeURIComponent(p.title)}`}
+              class="group mt-8 inline-flex items-center h-12 gap-3 pl-5 pr-1.5 rounded-full bg-ink text-bone hover:bg-ink/90 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-[11px] tracking-[0.2em] uppercase"
+            >
+              <span>{p.price ? "Acquire" : "Inquire"}</span>
+              <span class="w-9 h-9 rounded-full bg-bone/15 grid place-items-center text-bone group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">↗</span>
+            </a>
+          )}
+          {p.sold && (
+            <a
+              href="/#contact"
+              class="group mt-8 inline-flex items-center h-12 gap-3 pl-5 pr-1.5 rounded-full ring-1 ring-ink/20 text-ink hover:bg-ink/[0.04] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-[11px] tracking-[0.2em] uppercase"
+            >
+              <span>Commission similar</span>
+              <span class="w-9 h-9 rounded-full bg-ink text-bone grid place-items-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">↗</span>
+            </a>
+          )}
+
+          <!-- Description -->
+          <p class="mt-10 md:mt-14 text-[15px] md:text-base leading-[1.7] text-ink/85 max-w-prose">
+            {description}
+          </p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- More from this series                                        -->
+    <!-- ============================================================ -->
+    {related.length > 0 && (
+      <section class="border-t border-ink/15 px-6 md:px-12 lg:px-16 xl:px-24 py-20 md:py-28">
+        <div class="grid grid-cols-12 gap-6 md:gap-10 items-end mb-10 md:mb-14">
+          <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+            Related · {p.series}
+          </span>
+          <h2 class="col-span-12 md:col-span-7 font-display tracking-[-0.02em] uppercase leading-[0.92] text-[10vw] md:text-[5vw]" data-anim-h2>
+            <span class="sr-only">More from this series</span>
+            <span class="block overflow-hidden" aria-hidden="true">
+              <span class="block anim-line" style="--i:0">More from</span>
+            </span>
+            <span class="block overflow-hidden" aria-hidden="true">
+              <span class="block anim-line" style="--i:1">this series</span>
+            </span>
+          </h2>
+          <a href={seriesUrl} class="col-span-12 md:col-span-2 text-[11px] tracking-[0.2em] uppercase border-b border-ink pb-1 hover:opacity-60 transition-opacity duration-500 self-start">
+            See all →
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-16">
+          {related.map((rel) => {
+            const relSlug = `${seriesSlug(rel.title)}-${rel.year}`;
+            const relPrice = rel.sold ? "Sold" : rel.price ? `$${rel.price.toLocaleString()}` : "Contact for price";
+            return (
+              <a href={`/gallery/${relSlug}`} class="tilt-card group block" data-tilt>
+                <div class="tilt-inner relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
+                  <img
+                    src={rel.image}
+                    alt={rel.title}
+                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
+                    loading="lazy"
+                  />
+                  {rel.sold && (
+                    <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-ink text-bone text-[10px] tracking-[0.18em] uppercase">
+                      Sold
+                    </span>
+                  )}
+                </div>
+                <div class="mt-3 grid grid-cols-12 gap-2 text-[11px] tracking-[0.2em] uppercase text-ink/65">
+                  <span class="col-span-7 truncate">{rel.title}</span>
+                  <span class="col-span-2 text-ink/45">{rel.year}</span>
+                  <span class={`col-span-3 text-right ${rel.sold ? "text-ink" : "text-ink/85"}`}>{relPrice}</span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </section>
+    )}
+
+    <!-- Footer -->
+    <footer class="bg-bone border-t border-ink/15 px-6 md:px-12 lg:px-16 xl:px-24 pt-12 md:pt-16 pb-32 md:pb-32 grid grid-cols-12 gap-6 md:gap-10 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+      <span class="col-span-12 md:col-span-4">© Vitaly Leshukov · 2026</span>
+      <a href="/gallery" class="col-span-6 md:col-span-4 hover:text-ink transition-colors duration-500">← All works</a>
+      <span class="col-span-6 md:col-span-4 text-right">vitalityart.es</span>
+    </footer>
+  </main>
+</Base>
+
+<style>
+  /* Lenis required CSS */
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: hidden; }
+  .lenis.lenis-smooth iframe { pointer-events: none; }
+
+  /* mask-reveal-up */
+  @keyframes anim-line {
+    from { opacity: 0; transform: translate3d(0, 30px, 0); filter: blur(6px); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+  }
+  .anim-line {
+    opacity: 0;
+    animation: anim-line 760ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 90ms);
+    will-change: opacity, transform, filter;
+  }
+  [data-anim-h2] .anim-line { animation-play-state: paused; }
+  [data-anim-h2].is-animated .anim-line { animation-play-state: running; }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-line { animation: none; opacity: 1; transform: none; filter: none; }
+  }
+
+  /* Cursor tilt on related works */
+  .tilt-card { perspective: 1200px; }
+  .tilt-inner {
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 600ms cubic-bezier(0.32, 0.72, 0, 1);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tilt-inner { transform: none !important; transition: none !important; }
+  }
+</style>
+
+<script>
+  import Lenis from "lenis";
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let lenis: Lenis | null = null;
+  if (!reduced) {
+    lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true, syncTouch: false });
+    const raf = (time: number) => { lenis?.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
+
+  // H2 reveal
+  const h2Els = document.querySelectorAll<HTMLElement>("[data-anim-h2]");
+  if (h2Els.length && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) { e.target.classList.add("is-animated"); io.unobserve(e.target); }
+        }
+      },
+      { threshold: 0.3, rootMargin: "0px 0px -8% 0px" },
+    );
+    for (const el of h2Els) io.observe(el);
+  } else {
+    for (const el of h2Els) el.classList.add("is-animated");
+  }
+
+  // Cursor tilt
+  const tiltCards = Array.from(document.querySelectorAll<HTMLElement>("[data-tilt]"));
+  if (!reduced && tiltCards.length && window.matchMedia("(hover: hover)").matches) {
+    const MAX_DEG = 5;
+    for (const card of tiltCards) {
+      const inner = card.querySelector<HTMLElement>(".tilt-inner");
+      if (!inner) continue;
+      card.addEventListener("mousemove", (e) => {
+        const rect = card.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width;
+        const py = (e.clientY - rect.top) / rect.height;
+        inner.style.setProperty("--tilt-x", `${(-(py - 0.5) * 2 * MAX_DEG).toFixed(2)}deg`);
+        inner.style.setProperty("--tilt-y", `${((px - 0.5) * 2 * MAX_DEG).toFixed(2)}deg`);
+      });
+      card.addEventListener("mouseleave", () => {
+        inner.style.setProperty("--tilt-x", "0deg");
+        inner.style.setProperty("--tilt-y", "0deg");
+      });
+    }
+  }
+
+  // Anchor clicks routed through lenis
+  if (lenis) {
+    for (const a of Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'))) {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if (!href || href === "#") return;
+        const target = document.querySelector<HTMLElement>(href);
+        if (!target) return;
+        e.preventDefault();
+        lenis!.scrollTo(target, { offset: -80, duration: 1.2 });
+      });
+    }
+  }
+</script>
