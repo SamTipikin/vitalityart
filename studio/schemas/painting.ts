@@ -52,13 +52,8 @@ export default defineType({
     defineField({
       name: "price",
       type: "number",
-      description: "Leave blank for 'Price on request'.",
-    }),
-    defineField({
-      name: "currency",
-      type: "string",
-      initialValue: "USD",
-      options: { list: ["USD", "EUR", "GBP"] },
+      description: "USD. Leave blank for 'Contact for price'.",
+      validation: (r) => r.min(0),
     }),
     defineField({
       name: "sold",

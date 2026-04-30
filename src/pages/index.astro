@@ -4,7 +4,7 @@
 //   • soft-blur-in (per-character) for the hero name
 //   • mask-reveal-up (per-line) for the pull-quote and section H2s
 import Base from "~/layouts/Base.astro";
-import { paintings, artist, exhibitions } from "~/playground/_placeholders";
+import { paintings, artist, exhibitions, events } from "~/playground/_placeholders";
 
 const featured = paintings.slice(0, 4);
 const feature = featured[0];
@@ -332,24 +332,58 @@ for (let i = 0; i < _max; i++) {
     <section id="exhibitions" class="bg-bone border-t border-ink/15 py-24 md:py-40 scroll-mt-24" data-reveal>
       <div class="px-6 md:px-10 grid grid-cols-12 gap-6 md:gap-10 mb-12 md:mb-16">
         <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
-          A 03 — Exhibitions
+          A 03 — Where shown
         </span>
-        <h2 class="col-span-12 md:col-span-9 font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92]" data-anim-h2>
-          <span class="sr-only">Shown at</span>
+        <h2 class="col-span-12 md:col-span-7 font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92]" data-anim-h2>
+          <span class="sr-only">Where shown</span>
           <span class="block overflow-hidden" aria-hidden="true">
-            <span class="block anim-line" style="--i:0">Shown at</span>
+            <span class="block anim-line" style="--i:0">Where shown</span>
           </span>
         </h2>
+
+        {/* Tabs — Events / Exhibitions */}
+        <div class="col-span-12 md:col-span-2 self-end" data-tabs>
+          <div role="tablist" aria-label="Show kind" class="inline-flex items-center rounded-full ring-1 ring-ink/15 p-1 text-[11px] tracking-[0.18em] uppercase">
+            <button
+              type="button"
+              role="tab"
+              data-tab="events"
+              aria-selected="true"
+              class="h-9 px-4 rounded-full bg-ink text-bone transition-colors duration-300 cursor-pointer"
+            >
+              Events
+            </button>
+            <button
+              type="button"
+              role="tab"
+              data-tab="exhibitions"
+              aria-selected="false"
+              class="h-9 px-4 rounded-full text-ink/65 hover:text-ink transition-colors duration-300 cursor-pointer"
+            >
+              Exhibitions
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Full-width table, edge-to-edge */}
-      <ol class="border-t border-ink/15">
-        {exhibitions.slice(0, 6).map((e) => (
+      {/* Events panel (default visible) */}
+      <ol class="border-t border-ink/15" data-tab-panel="events">
+        {events.map((e) => (
           <li class="grid grid-cols-12 gap-4 md:gap-6 px-6 md:px-10 py-5 md:py-7 border-b border-ink/15">
             <span class="col-span-2 md:col-span-1 font-display text-2xl md:text-3xl tracking-display">{e.year}</span>
             <span class="col-span-10 md:col-span-7 text-[15px] md:text-lg">{e.title}</span>
-            <span class="col-span-6 md:col-span-2 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center">{e.type}</span>
-            <span class="col-span-6 md:col-span-2 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-right">{e.city}</span>
+            <span class="col-span-12 md:col-span-4 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-left md:text-right">{e.location}</span>
+          </li>
+        ))}
+      </ol>
+
+      {/* Exhibitions panel */}
+      <ol class="border-t border-ink/15 hidden" data-tab-panel="exhibitions">
+        {exhibitions.map((e) => (
+          <li class="grid grid-cols-12 gap-4 md:gap-6 px-6 md:px-10 py-5 md:py-7 border-b border-ink/15">
+            <span class="col-span-2 md:col-span-1 font-display text-2xl md:text-3xl tracking-display">{e.year}</span>
+            <span class="col-span-10 md:col-span-7 text-[15px] md:text-lg">{e.title}</span>
+            <span class="col-span-12 md:col-span-4 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-left md:text-right">{e.location}</span>
           </li>
         ))}
       </ol>
@@ -791,6 +825,29 @@ for (let i = 0; i < _max; i++) {
       { rootMargin: "-40% 0px -40% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
     sections.forEach((s) => navIo.observe(s));
+  }
+
+  // === Events / Exhibitions tabs ===
+  const tabsRoot = document.querySelector<HTMLElement>("[data-tabs]");
+  if (tabsRoot) {
+    const tabButtons = Array.from(tabsRoot.querySelectorAll<HTMLButtonElement>("[data-tab]"));
+    const panels = Array.from(document.querySelectorAll<HTMLElement>("[data-tab-panel]"));
+    const setTab = (key: string) => {
+      for (const btn of tabButtons) {
+        const isActive = btn.dataset.tab === key;
+        btn.setAttribute("aria-selected", String(isActive));
+        btn.classList.toggle("bg-ink", isActive);
+        btn.classList.toggle("text-bone", isActive);
+        btn.classList.toggle("text-ink/65", !isActive);
+        btn.classList.toggle("hover:text-ink", !isActive);
+      }
+      for (const panel of panels) {
+        panel.classList.toggle("hidden", panel.dataset.tabPanel !== key);
+      }
+    };
+    for (const btn of tabButtons) {
+      btn.addEventListener("click", () => setTab(btn.dataset.tab || "events"));
+    }
   }
 
   // === Hero rotator ===

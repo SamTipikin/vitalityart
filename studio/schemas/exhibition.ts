@@ -17,21 +17,24 @@ export default defineType({
       description: "Use the first day of the exhibition.",
     }),
     defineField({
-      name: "type",
+      name: "kind",
       type: "string",
+      title: "Kind",
       options: {
         list: [
-          { title: "Solo show", value: "solo" },
-          { title: "Group show", value: "group" },
-          { title: "Art fair", value: "fair" },
-          { title: "Auction", value: "auction" },
+          { title: "Event (recent / upcoming)", value: "event" },
+          { title: "Exhibition (archive)", value: "exhibition" },
         ],
         layout: "radio",
       },
+      initialValue: "exhibition",
+      description: "Events surface on the home page calendar tab. Exhibitions are the full archive.",
     }),
-    defineField({ name: "venue", type: "string" }),
-    defineField({ name: "city", type: "string" }),
-    defineField({ name: "country", type: "string" }),
+    defineField({
+      name: "location",
+      type: "string",
+      description: "Free-form. Exactly as it should display, e.g. 'Taipei (Taiwan)' or 'Lloret de Mar, Spain'.",
+    }),
     defineField({
       name: "link",
       type: "url",
@@ -49,14 +52,14 @@ export default defineType({
     select: {
       title: "title",
       date: "date",
-      city: "city",
-      type: "type",
+      location: "location",
+      kind: "kind",
     },
-    prepare({ title, date, city, type }) {
+    prepare({ title, date, location, kind }) {
       const year = date ? new Date(date).getFullYear() : "";
       return {
         title,
-        subtitle: [year, type, city].filter(Boolean).join(" · "),
+        subtitle: [year, kind, location].filter(Boolean).join(" · "),
       };
     },
   },

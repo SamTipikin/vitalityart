@@ -21,7 +21,7 @@ const cdn = "https://cdn.prod.website-files.com/6625a5df3e3abfceb75b8e81";
 const _base: PlaceholderPainting[] = [
   {
     title: "Legends of the East — Be the Sun",
-    series: "Birth",
+    series: "Oriental Legends",
     year: 2024,
     width: 80, height: 80,
     medium: "Oil on canvas",
@@ -31,7 +31,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Against the Current — From a Dream to a Goal",
-    series: "Life In Water",
+    series: "Life in Water",
     year: 2024,
     width: 110, height: 280,
     medium: "Oil on canvas",
@@ -41,7 +41,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Life in the World — X",
-    series: "Life In",
+    series: "Life in World",
     year: 2024,
     width: 170, height: 110,
     medium: "Oil on canvas",
@@ -51,7 +51,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Goldfish III",
-    series: "Goldfish",
+    series: "Koi Symphony",
     year: 2023,
     width: 80, height: 50,
     medium: "Oil on canvas",
@@ -61,7 +61,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Dream",
-    series: "Dreams",
+    series: "Dream",
     year: 2023,
     width: 80, height: 80,
     medium: "Oil on canvas",
@@ -71,7 +71,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Creation of the World — 7",
-    series: "Birth",
+    series: "Oriental Legends",
     year: 2023,
     width: 120, height: 120,
     medium: "Oil on canvas",
@@ -81,7 +81,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Yin Yang — Creation",
-    series: "Birth",
+    series: "Oriental Legends",
     year: 2023,
     width: 160, height: 100,
     medium: "Oil on canvas",
@@ -91,7 +91,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Blue Irises",
-    series: "Naked Beauty",
+    series: "Nude Beauty",
     year: 2024,
     width: 120, height: 60,
     medium: "Oil on canvas",
@@ -121,16 +121,18 @@ export const paintings: PlaceholderPainting[] = [
   ),
 ];
 
-// Series taxonomy — matches the existing Webflow series, will be replaced
-// by Sanity's series collection once the CSV import lands.
+// Series taxonomy — matches the real Webflow CMS categories (10 series).
+// Sold paintings are NOT a category; they're a separate boolean filter.
 export const seriesList = [
-  { slug: "all",            label: "All works" },
-  { slug: "birth",          label: "Birth" },
-  { slug: "naked-beauty",   label: "Naked Beauty" },
-  { slug: "life-in",        label: "Life In" },
-  { slug: "life-in-water",  label: "Life In Water" },
-  { slug: "goldfish",       label: "Goldfish" },
-  { slug: "dreams",         label: "Dreams" },
+  { slug: "birth",            label: "Birth" },
+  { slug: "dream",            label: "Dream" },
+  { slug: "green-room",       label: "Green Room" },
+  { slug: "koi-symphony",     label: "Koi Symphony" },
+  { slug: "landscape",        label: "Landscape" },
+  { slug: "life-in-world",    label: "Life in World" },
+  { slug: "life-in-water",    label: "Life in Water" },
+  { slug: "nude-beauty",      label: "Nude Beauty" },
+  { slug: "oriental-legends", label: "Oriental Legends" },
 ];
 
 export const seriesSlug = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
@@ -144,12 +146,31 @@ export const artist = {
     "Born in the Urals, working today from Spain. After a coma in 2018, Vitaly returned to the canvas with a single conviction — that paint, large and unflinching, was the only honest record of being alive. The work since has been shown in Taipei, Dubai, Bordeaux, Lausanne, and Tokyo.",
 };
 
-export const exhibitions = [
-  { year: 2024, title: "Art Taipei",        type: "fair",    city: "Taipei" },
-  { year: 2024, title: "World Art Dubai",   type: "fair",    city: "Dubai" },
-  { year: 2024, title: "Solo — Bordeaux",   type: "solo",    city: "Bordeaux" },
-  { year: 2023, title: "Lausanne Art Fair", type: "fair",    city: "Lausanne" },
-  { year: 2023, title: "Tokyo International Art Fair", type: "fair", city: "Tokyo" },
-  { year: 2023, title: "Group — Madrid",    type: "group",   city: "Madrid" },
-  { year: 2022, title: "Solo — Valencia",   type: "solo",    city: "Valencia" },
+export interface PlaceholderExhibition {
+  year: number;
+  title: string;
+  location: string;
+  kind: "event" | "exhibition";
+}
+
+// Exhibitions (full archive)
+export const exhibitions: PlaceholderExhibition[] = [
+  { year: 2025, title: "Art Revolution Taipei A.R.T. 2025",      location: "Taipei (Taiwan)",       kind: "exhibition" },
+  { year: 2024, title: "International Painting Exhibition",      location: "Ishinomaki (Japan)",    kind: "exhibition" },
+  { year: 2024, title: "Solo Show — Art Masha Gallery",          location: "Andorra la Vella",      kind: "exhibition" },
+  { year: 2024, title: "Group Show — House of Culture",          location: "Lloret de Mar (Spain)", kind: "exhibition" },
+  { year: 2023, title: "Art Revolution Taipei A.R.T. 2023",      location: "Taipei (Taiwan)",       kind: "exhibition" },
+  { year: 2023, title: "International Modern Art Exhibition",    location: "Brussels (Belgium)",    kind: "exhibition" },
+  { year: 2022, title: "ART3F — Bordeaux",                       location: "Bordeaux (France)",     kind: "exhibition" },
+  { year: 2022, title: "Lausanne Art Fair",                      location: "Lausanne (Switzerland)", kind: "exhibition" },
+  { year: 2022, title: "ART3F — Luxemburg",                      location: "Luxembourg",            kind: "exhibition" },
+  { year: 2021, title: "ART-FAIR ART3F-Mulhouse",                location: "Mulhouse (France)",     kind: "exhibition" },
+];
+
+// Events (recent / upcoming — surfaced on home page calendar tab)
+export const events: PlaceholderExhibition[] = [
+  { year: 2025, title: "Solo Show",                              location: "Sendai (Japan)",        kind: "event" },
+  { year: 2025, title: "Solo Show",                              location: "Ishinomaki (Japan)",    kind: "event" },
+  { year: 2024, title: "World Art Dubai",                        location: "Dubai (UAE)",           kind: "event" },
+  { year: 2024, title: "Group Show — Mestral Art Gallery",       location: "Lloret de Mar (Spain)", kind: "event" },
 ];

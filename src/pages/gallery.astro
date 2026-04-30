@@ -18,7 +18,6 @@ for (const p of paintings) {
 }
 
 const orderedSeries = seriesList
-  .filter((s) => s.slug !== "all")
   .map((s) => ({ ...s, works: grouped.get(s.slug) ?? [] }))
   .filter((s) => s.works.length > 0);
 ---
@@ -139,7 +138,7 @@ const orderedSeries = seriesList
                     : "Contact for price";
                 const slug = `${seriesSlug(p.title)}-${p.year}`;
                 return (
-                  <a href={`/gallery/${slug}`} class="tilt-card group block" data-tilt>
+                  <a href={`/gallery/${slug}`} class="tilt-card group block" data-tilt data-sold={p.sold ? "true" : "false"}>
                     <div class="tilt-inner relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
                       <img
                         src={p.image}
@@ -197,6 +196,16 @@ const orderedSeries = seriesList
               </li>
             ))}
           </ul>
+
+          {/* Filters — secondary axis (sold status, expand here later) */}
+          <span class="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mt-8 mb-3">
+            Filter
+          </span>
+          <label class="inline-flex items-center gap-2 h-9 px-3 rounded-full ring-1 ring-ink/15 text-[11px] tracking-[0.18em] uppercase cursor-pointer hover:bg-ink/[0.04] transition-colors duration-300">
+            <input type="checkbox" data-sold-filter class="sr-only peer" />
+            <span class="w-4 h-4 rounded-sm ring-1 ring-ink/35 peer-checked:bg-ink peer-checked:ring-ink relative transition-all duration-200 peer-checked:after:content-['✓'] peer-checked:after:absolute peer-checked:after:inset-0 peer-checked:after:flex peer-checked:after:items-center peer-checked:after:justify-center peer-checked:after:text-bone peer-checked:after:text-[10px]"></span>
+            <span>Available only</span>
+          </label>
         </div>
       </aside>
     </div>
@@ -276,6 +285,10 @@ const orderedSeries = seriesList
     background: rgb(255 255 255 / 0.20); /* fff at 20% */
     transition: transform 120ms linear;
   }
+
+  /* Available-only filter — hide sold cards when body has the class */
+  body.available-only [data-sold="true"] { display: none; }
+  body.available-only [data-series-section][data-empty] { display: none; }
 
   /* ===== Cursor tilt — paintings lean toward the cursor on hover ===== */
   .tilt-card { perspective: 1200px; }
@@ -408,6 +421,25 @@ const orderedSeries = seriesList
   if (initialHash && chipsBySlug.has(initialHash)) {
     activeSlug = initialHash;
     setActive(initialHash);
+  }
+
+  // === Available-only filter ===
+  const soldToggle = document.querySelector<HTMLInputElement>("[data-sold-filter]");
+  if (soldToggle) {
+    const updateEmptySections = () => {
+      for (const sec of sections) {
+        const visibleCards = sec.querySelectorAll<HTMLElement>('[data-sold="false"]').length;
+        if (soldToggle.checked && visibleCards === 0) {
+          sec.setAttribute("data-empty", "");
+        } else {
+          sec.removeAttribute("data-empty");
+        }
+      }
+    };
+    soldToggle.addEventListener("change", () => {
+      document.body.classList.toggle("available-only", soldToggle.checked);
+      updateEmptySections();
+    });
   }
 
   // === Cursor tilt — paintings lean toward the mouse on hover ===
