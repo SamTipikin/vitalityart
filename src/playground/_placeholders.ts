@@ -17,7 +17,8 @@ export interface PlaceholderPainting {
 
 const cdn = "https://cdn.prod.website-files.com/6625a5df3e3abfceb75b8e81";
 
-export const paintings: PlaceholderPainting[] = [
+// Eight base paintings that we'll cycle to demo a fuller gallery.
+const _base: PlaceholderPainting[] = [
   {
     title: "Legends of the East — Be the Sun",
     series: "Legends",
@@ -99,6 +100,39 @@ export const paintings: PlaceholderPainting[] = [
     ratio: 60 / 120,
   },
 ];
+
+// Generate ~24 paintings by varying the base set across years/sizes/prices.
+// Real Sanity data will replace this once the CSV import lands.
+const _variations: Array<{ titleSuffix: string; year: number; priceMultiplier: number; sold?: boolean }> = [
+  { titleSuffix: "II", year: 2023, priceMultiplier: 0.9 },
+  { titleSuffix: "III", year: 2022, priceMultiplier: 0.8, sold: true },
+];
+
+export const paintings: PlaceholderPainting[] = [
+  ..._base,
+  ..._variations.flatMap((v) =>
+    _base.map((p, i) => ({
+      ...p,
+      title: `${p.title.split(" — ")[0]} ${v.titleSuffix}`,
+      year: v.year,
+      price: p.price ? Math.round(p.price * v.priceMultiplier / 100) * 100 : null,
+      sold: v.sold ?? (i % 5 === 0),
+    })),
+  ),
+];
+
+// Series taxonomy — used by the gallery filter
+export const seriesList = [
+  { slug: "all",          label: "All works" },
+  { slug: "legends",      label: "Legends" },
+  { slug: "life-in",      label: "Life In" },
+  { slug: "goldfish",     label: "Goldfish" },
+  { slug: "dreams",       label: "Dreams" },
+  { slug: "birth",        label: "Birth" },
+  { slug: "naked-beauty", label: "Naked Beauty" },
+];
+
+export const seriesSlug = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
 
 export const artist = {
   name: "Vitaly Leshukov",

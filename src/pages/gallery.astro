@@ -1,0 +1,281 @@
+---
+// /gallery — full catalog. Different design beat than the home:
+// dense, calm, no parallax, white-cube. Series filter pills at the
+// top with sticky behavior, client-side filtering by data-series.
+import Base from "~/layouts/Base.astro";
+import { paintings, seriesList, seriesSlug } from "~/playground/_placeholders";
+
+// Counts per series for the filter pills
+const counts = new Map<string, number>();
+counts.set("all", paintings.length);
+for (const p of paintings) {
+  const slug = seriesSlug(p.series);
+  counts.set(slug, (counts.get(slug) || 0) + 1);
+}
+---
+
+<Base
+  title="Gallery — Vitaly Leshukov"
+  description={`The full catalogue of paintings by Vitaly Leshukov. ${paintings.length} works in oil on canvas.`}
+>
+  <main class="bg-bone text-ink min-h-screen">
+    <!-- ============================================================ -->
+    <!-- Floating pill nav (same component pattern as home)           -->
+    <!-- ============================================================ -->
+    <nav
+      aria-label="Primary"
+      class="fixed left-1/2 -translate-x-1/2 z-50 px-3 sm:px-2"
+      style="bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);"
+    >
+      <ul class="flex items-stretch gap-1 rounded-full bg-bone/85 backdrop-blur-xl ring-1 ring-ink/15 shadow-[0_10px_40px_-12px_rgba(27,35,48,0.25)] p-1 text-[11px] tracking-[0.2em] uppercase">
+        <li class="flex">
+          <a href="/" class="inline-flex items-center h-11 px-3 sm:px-4 rounded-full text-ink/70 hover:text-ink hover:bg-ink/[0.04] transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer">
+            Home
+          </a>
+        </li>
+        <li class="flex">
+          <a href="/gallery" class="inline-flex items-center h-11 px-3 sm:px-4 rounded-full text-ink bg-ink/[0.06] cursor-pointer">
+            Gallery
+          </a>
+        </li>
+        <li class="flex">
+          <a href="/#exhibitions" class="inline-flex items-center h-11 px-3 sm:px-4 rounded-full text-ink/70 hover:text-ink hover:bg-ink/[0.04] transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer">
+            Exhibitions
+          </a>
+        </li>
+        <li class="flex">
+          <a
+            href="/#contact"
+            class="group inline-flex items-center h-11 gap-2 pl-4 pr-1 rounded-full bg-ink text-bone hover:bg-ink/90 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
+          >
+            <span>Contact</span>
+            <span class="w-9 h-9 rounded-full bg-bone/15 grid place-items-center text-bone group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">↗</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HEADER — title + count                                       -->
+    <!-- ============================================================ -->
+    <section class="px-6 md:px-12 lg:px-16 xl:px-24 pt-16 md:pt-32 pb-8 md:pb-12">
+      <div class="grid grid-cols-12 gap-6 md:gap-10 items-end">
+        <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+          Catalogue · {paintings.length} works
+        </span>
+        <h1 class="col-span-12 md:col-span-9 font-display tracking-[-0.02em] uppercase leading-[0.88] text-[18vw] md:text-[12vw] lg:text-[10vw]" data-anim-h2>
+          <span class="sr-only">Gallery — all paintings by Vitaly Leshukov</span>
+          {["The full", "catalogue."].map((line, i) => (
+            <span class="block overflow-hidden" aria-hidden="true">
+              <span class="block anim-line" style={`--i:${i}`}>{line}</span>
+            </span>
+          ))}
+        </h1>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FILTER BAR — sticky, series chips                            -->
+    <!-- ============================================================ -->
+    <div
+      class="sticky top-0 z-30 bg-bone/85 backdrop-blur-xl border-y border-ink/10"
+      data-filter-bar
+    >
+      <div class="px-6 md:px-12 lg:px-16 xl:px-24 py-4">
+        <div class="flex items-center justify-between gap-4">
+          <ul class="flex flex-wrap items-center gap-1.5" data-filter-list>
+            {seriesList.map((s) => (
+              <li>
+                <button
+                  type="button"
+                  data-filter={s.slug}
+                  class={`inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 cursor-pointer ${s.slug === "all" ? "bg-ink text-bone" : "bg-transparent text-ink/70 hover:text-ink hover:bg-ink/[0.05]"}`}
+                >
+                  <span>{s.label}</span>
+                  <span class="text-[10px] opacity-60 tabular-nums">({counts.get(s.slug) ?? 0})</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <span class="hidden md:inline text-[11px] tracking-[0.2em] uppercase text-ink/55 tabular-nums" data-count-display>
+            Showing {paintings.length}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- GRID — uniform 4:5 cards, responsive cols, no parallax       -->
+    <!-- ============================================================ -->
+    <section class="px-6 md:px-12 lg:px-16 xl:px-24 pt-12 md:pt-16 pb-32 md:pb-40">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-20" data-grid>
+        {paintings.map((p) => {
+          const priceLabel = p.sold
+            ? "Sold"
+            : p.price
+              ? `$${p.price.toLocaleString()}`
+              : "Contact for price";
+          const slug = `${seriesSlug(p.title)}-${p.year}`;
+          return (
+            <a
+              href={`/gallery/${slug}`}
+              class="group block"
+              data-card
+              data-series={seriesSlug(p.series)}
+            >
+              <div class="relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
+                <img
+                  src={p.image}
+                  alt={p.title}
+                  class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
+                  loading="lazy"
+                />
+                {/* Sold tag — always visible on sold works */}
+                {p.sold && (
+                  <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-ink text-bone text-[10px] tracking-[0.18em] uppercase">
+                    Sold
+                  </span>
+                )}
+                {/* Hover chips */}
+                <div class="absolute bottom-3 right-3 flex flex-col items-end gap-1.5 pointer-events-none opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                  <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                    {p.medium}
+                  </span>
+                  <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                    {p.width}×{p.height} cm
+                  </span>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-12 gap-2 text-[11px] tracking-[0.2em] uppercase text-ink/65">
+                <span class="col-span-6 md:col-span-7 truncate">{p.title}</span>
+                <span class="col-span-2 text-ink/45">{p.year}</span>
+                <span class={`col-span-4 md:col-span-3 text-right ${p.sold ? "text-ink" : "text-ink/85"}`}>{priceLabel}</span>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+
+      {/* Empty state — shown when no works match the active filter */}
+      <div class="hidden text-center py-24" data-empty-state>
+        <p class="font-display tracking-[-0.02em] uppercase text-3xl md:text-5xl text-ink/40">
+          Nothing here yet
+        </p>
+        <p class="mt-4 text-[11px] tracking-[0.2em] uppercase text-ink/50">
+          Try a different series.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER — minimal, links back home                            -->
+    <!-- ============================================================ -->
+    <footer class="bg-bone border-t border-ink/15 px-6 md:px-12 lg:px-16 xl:px-24 pt-12 md:pt-16 pb-32 md:pb-32 grid grid-cols-12 gap-6 md:gap-10 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+      <span class="col-span-12 md:col-span-4">© Vitaly Leshukov · 2026</span>
+      <a href="/" class="col-span-6 md:col-span-4 hover:text-ink transition-colors duration-500">← Back to home</a>
+      <span class="col-span-6 md:col-span-4 text-right">vitalityart.es</span>
+    </footer>
+  </main>
+</Base>
+
+<style>
+  /* Lenis required CSS (in case the script-imported lenis below initialises) */
+  html.lenis, html.lenis body { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: hidden; }
+  .lenis.lenis-smooth iframe { pointer-events: none; }
+
+  /* mask-reveal-up (per-line) — used on the H1 */
+  @keyframes anim-line {
+    from { opacity: 0; transform: translate3d(0, 30px, 0); filter: blur(6px); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+  }
+  .anim-line {
+    opacity: 0;
+    animation: anim-line 760ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 90ms);
+    will-change: opacity, transform, filter;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-line { animation: none; opacity: 1; transform: none; filter: none; }
+  }
+
+  /* Cards fading out when filtered */
+  [data-card] {
+    transition: opacity 400ms cubic-bezier(0.32, 0.72, 0, 1), transform 400ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  [data-card][data-hidden] {
+    opacity: 0;
+    transform: scale(0.96);
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import Lenis from "lenis";
+
+  // === Lenis smooth scroll ===
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let lenis: Lenis | null = null;
+  if (!reduced) {
+    lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true, syncTouch: false });
+    const raf = (time: number) => { lenis?.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
+
+  // === Series filter ===
+  const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-filter]"));
+  const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-card]"));
+  const grid = document.querySelector<HTMLElement>("[data-grid]");
+  const emptyState = document.querySelector<HTMLElement>("[data-empty-state]");
+  const countDisplay = document.querySelector<HTMLElement>("[data-count-display]");
+
+  const setActive = (slug: string) => {
+    for (const btn of filterButtons) {
+      const isActive = btn.dataset.filter === slug;
+      btn.classList.toggle("bg-ink", isActive);
+      btn.classList.toggle("text-bone", isActive);
+      btn.classList.toggle("text-ink/70", !isActive);
+      btn.classList.toggle("hover:text-ink", !isActive);
+      btn.classList.toggle("hover:bg-ink/[0.05]", !isActive);
+    }
+  };
+
+  const filter = (slug: string) => {
+    let visible = 0;
+    for (const card of cards) {
+      const cardSeries = card.dataset.series || "";
+      const show = slug === "all" || cardSeries === slug;
+      if (show) {
+        card.removeAttribute("data-hidden");
+        visible++;
+      } else {
+        card.setAttribute("data-hidden", "");
+      }
+    }
+    if (grid) grid.classList.toggle("hidden", visible === 0);
+    if (emptyState) emptyState.classList.toggle("hidden", visible !== 0);
+    if (countDisplay) countDisplay.textContent = `Showing ${visible}`;
+    setActive(slug);
+    // Update URL hash for shareable filtered view
+    if (slug === "all") {
+      history.replaceState(null, "", window.location.pathname);
+    } else {
+      history.replaceState(null, "", `#${slug}`);
+    }
+  };
+
+  for (const btn of filterButtons) {
+    btn.addEventListener("click", () => {
+      const slug = btn.dataset.filter || "all";
+      filter(slug);
+    });
+  }
+
+  // Apply filter from URL hash on load (e.g. /gallery#dreams)
+  const initialHash = window.location.hash.replace("#", "");
+  if (initialHash && filterButtons.some((b) => b.dataset.filter === initialHash)) {
+    filter(initialHash);
+  }
+</script>
