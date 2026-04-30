@@ -1,13 +1,15 @@
 ---
-// /gallery — full catalogue. Paintings are grouped into one section
-// per series. Sticky chip bar acts as anchor navigation: clicking
-// a chip scrolls smoothly to that section. The currently in-view
-// section is highlighted in the chip bar with a progress bar that
-// fills as the user scrolls through it.
+// /gallery — full catalogue. Paintings grouped into one section per series.
+//
+// Desktop (lg+): a sticky right rail holds the chip list (wraps freely
+// to handle any number of series). Main content column on the left.
+// Mobile (< lg): chips collapse to a sticky horizontal bar at the top.
+//
+// Chips act as anchor navigation — clicking scrolls to the section.
+// Currently in-view section is the active chip and shows a progress bar.
 import Base from "~/layouts/Base.astro";
 import { paintings, seriesList, seriesSlug, type PlaceholderPainting } from "~/playground/_placeholders";
 
-// Group paintings by series slug
 const grouped = new Map<string, PlaceholderPainting[]>();
 for (const p of paintings) {
   const slug = seriesSlug(p.series);
@@ -15,8 +17,6 @@ for (const p of paintings) {
   grouped.get(slug)!.push(p);
 }
 
-// Order sections by the canonical seriesList order — drop the "all" entry
-// and any series that have zero works.
 const orderedSeries = seriesList
   .filter((s) => s.slug !== "all")
   .map((s) => ({ ...s, works: grouped.get(s.slug) ?? [] }))
@@ -28,7 +28,7 @@ const orderedSeries = seriesList
   description={`The full catalogue of paintings by Vitaly Leshukov. ${paintings.length} works in oil on canvas across ${orderedSeries.length} series.`}
 >
   <main class="bg-bone text-ink min-h-screen">
-    <!-- Floating pill nav (same component as home) -->
+    <!-- Floating bottom nav -->
     <nav
       aria-label="Primary"
       class="fixed left-1/2 -translate-x-1/2 z-50 px-3 sm:px-2"
@@ -63,47 +63,23 @@ const orderedSeries = seriesList
     </nav>
 
     <!-- ============================================================ -->
-    <!-- Page header                                                  -->
+    <!-- MOBILE chip bar — sticky horizontal at top, < lg only         -->
     <!-- ============================================================ -->
-    <section class="px-6 md:px-12 lg:px-16 xl:px-24 pt-16 md:pt-32 pb-8 md:pb-12">
-      <div class="grid grid-cols-12 gap-6 md:gap-10 items-end">
-        <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
-          Catalogue · {paintings.length} works · {orderedSeries.length} series
-        </span>
-        <h1 class="col-span-12 md:col-span-9 font-display tracking-[-0.02em] uppercase leading-[0.88] text-[18vw] md:text-[12vw] lg:text-[10vw]" data-anim-h2>
-          <span class="sr-only">Gallery — all paintings by Vitaly Leshukov</span>
-          {["The full", "catalogue."].map((line, i) => (
-            <span class="block overflow-hidden" aria-hidden="true">
-              <span class="block anim-line" style={`--i:${i}`}>{line}</span>
-            </span>
-          ))}
-        </h1>
-      </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- Sticky series anchor bar                                     -->
-    <!-- Chips scroll to their section. Active chip shows a progress  -->
-    <!-- bar. Only one chip is "active" at a time.                    -->
-    <!-- ============================================================ -->
-    <div class="sticky top-0 z-30 bg-bone/85 backdrop-blur-xl border-y border-ink/10">
-      <div class="px-6 md:px-12 lg:px-16 xl:px-24 py-4 overflow-x-auto">
-        <ul class="flex items-center gap-1.5 min-w-max" data-chip-list>
+    <div class="lg:hidden sticky top-0 z-30 bg-bone/85 backdrop-blur-xl border-b border-ink/10">
+      <div class="px-6 py-3 overflow-x-auto">
+        <ul class="flex items-center gap-1.5 min-w-max">
           {orderedSeries.map((s, i) => (
             <li>
               <a
                 href={`#${s.slug}`}
                 data-chip={s.slug}
-                class={`relative inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 cursor-pointer overflow-hidden ${i === 0 ? "bg-ink text-bone" : "bg-transparent text-ink/65 hover:text-ink hover:bg-ink/[0.05]"}`}
+                data-active={i === 0 ? "" : null}
+                class="series-chip relative inline-flex items-center gap-1.5 h-9 px-3 rounded-full ring-1 ring-ink/15 text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 cursor-pointer overflow-hidden"
                 style="--progress: 0;"
               >
-                <span class="relative z-10">{s.label}</span>
-                <span class="relative z-10 text-[10px] opacity-60 tabular-nums">({s.works.length})</span>
-                {/* Progress bar — only painted on the active chip via [data-active] */}
-                <span
-                  class="chip-progress absolute left-0 right-0 bottom-0 h-[2px] origin-left pointer-events-none"
-                  aria-hidden="true"
-                ></span>
+                <span class="relative z-10 chip-label">{s.label}</span>
+                <span class="relative z-10 chip-count text-[10px] opacity-50 tabular-nums">({s.works.length})</span>
+                <span class="chip-progress absolute left-0 right-0 bottom-0 h-[2px] origin-left pointer-events-none" aria-hidden="true"></span>
               </a>
             </li>
           ))}
@@ -112,74 +88,121 @@ const orderedSeries = seriesList
     </div>
 
     <!-- ============================================================ -->
-    <!-- One section per series                                       -->
+    <!-- DESKTOP layout — main column + sticky right rail              -->
     <!-- ============================================================ -->
-    {orderedSeries.map((s, i) => (
-      <section
-        id={s.slug}
-        class="px-6 md:px-12 lg:px-16 xl:px-24 pt-24 md:pt-32 pb-24 md:pb-32 scroll-mt-24"
-        data-series-section
-        data-series-slug={s.slug}
-      >
-        <div class="grid grid-cols-12 gap-6 md:gap-10 items-end mb-12 md:mb-16">
-          <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/55 tabular-nums">
-            Series {String(i + 1).padStart(2, "0")} / {String(orderedSeries.length).padStart(2, "0")} · {s.works.length} works
-          </span>
-          <h2 class="col-span-12 md:col-span-9 font-display tracking-[-0.02em] uppercase leading-[0.92] text-[14vw] md:text-[7vw] lg:text-[6vw]" data-anim-h2>
-            <span class="sr-only">{s.label}</span>
-            <span class="block overflow-hidden" aria-hidden="true">
-              <span class="block anim-line" style="--i:0">{s.label}</span>
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_240px] xl:grid-cols-[1fr_280px] gap-x-12 px-6 md:px-12 lg:px-16 xl:px-24">
+      <!-- ===== Main column ===== -->
+      <div class="min-w-0">
+        <!-- Page header -->
+        <section class="pt-16 md:pt-32 pb-8 md:pb-12">
+          <div class="grid grid-cols-12 gap-6 md:gap-10 items-end">
+            <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+              Catalogue · {paintings.length} works · {orderedSeries.length} series
             </span>
-          </h2>
-        </div>
+            <h1 class="col-span-12 md:col-span-9 font-display tracking-[-0.02em] uppercase leading-[0.88] text-[18vw] md:text-[12vw] lg:text-[10vw]" data-anim-h2>
+              <span class="sr-only">Gallery — all paintings by Vitaly Leshukov</span>
+              {["The full", "catalogue."].map((line, i) => (
+                <span class="block overflow-hidden" aria-hidden="true">
+                  <span class="block anim-line" style={`--i:${i}`}>{line}</span>
+                </span>
+              ))}
+            </h1>
+          </div>
+        </section>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-20">
-          {s.works.map((p) => {
-            const priceLabel = p.sold
-              ? "Sold"
-              : p.price
-                ? `$${p.price.toLocaleString()}`
-                : "Contact for price";
-            const slug = `${seriesSlug(p.title)}-${p.year}`;
-            return (
-              <a href={`/gallery/${slug}`} class="group block">
-                <div class="relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
-                  <img
-                    src={p.image}
-                    alt={p.title}
-                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
-                    loading="lazy"
-                  />
-                  {p.sold && (
-                    <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-ink text-bone text-[10px] tracking-[0.18em] uppercase">
-                      Sold
-                    </span>
-                  )}
-                  <div class="absolute bottom-3 right-3 flex flex-col items-end gap-1.5 pointer-events-none opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
-                    <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
-                      {p.medium}
-                    </span>
-                    <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
-                      {p.width}×{p.height} cm
-                    </span>
-                  </div>
-                </div>
-                <div class="mt-3 grid grid-cols-12 gap-2 text-[11px] tracking-[0.2em] uppercase text-ink/65">
-                  <span class="col-span-6 md:col-span-7 truncate">{p.title}</span>
-                  <span class="col-span-2 text-ink/45">{p.year}</span>
-                  <span class={`col-span-4 md:col-span-3 text-right ${p.sold ? "text-ink" : "text-ink/85"}`}>{priceLabel}</span>
-                </div>
-              </a>
-            );
-          })}
-        </div>
-      </section>
-    ))}
+        <!-- Series sections -->
+        {orderedSeries.map((s, i) => (
+          <section
+            id={s.slug}
+            class="pt-24 md:pt-32 pb-16 md:pb-24 scroll-mt-24"
+            data-series-section
+            data-series-slug={s.slug}
+          >
+            <div class="grid grid-cols-12 gap-6 md:gap-10 items-end mb-10 md:mb-14">
+              <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/55 tabular-nums">
+                Series {String(i + 1).padStart(2, "0")} / {String(orderedSeries.length).padStart(2, "0")} · {s.works.length} works
+              </span>
+              <h2 class="col-span-12 md:col-span-9 font-display tracking-[-0.02em] uppercase leading-[0.92] text-[14vw] md:text-[7vw] lg:text-[5vw]" data-anim-h2>
+                <span class="sr-only">{s.label}</span>
+                <span class="block overflow-hidden" aria-hidden="true">
+                  <span class="block anim-line" style="--i:0">{s.label}</span>
+                </span>
+              </h2>
+            </div>
 
-    <!-- ============================================================ -->
-    <!-- Footer                                                       -->
-    <!-- ============================================================ -->
-    <footer class="bg-bone border-t border-ink/15 px-6 md:px-12 lg:px-16 xl:px-24 pt-12 md:pt-16 pb-32 md:pb-32 grid grid-cols-12 gap-6 md:gap-10 text-[11px] tracking-[0.2em] uppercase text-ink/60">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-20">
+              {s.works.map((p) => {
+                const priceLabel = p.sold
+                  ? "Sold"
+                  : p.price
+                    ? `$${p.price.toLocaleString()}`
+                    : "Contact for price";
+                const slug = `${seriesSlug(p.title)}-${p.year}`;
+                return (
+                  <a href={`/gallery/${slug}`} class="group block">
+                    <div class="relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
+                      <img
+                        src={p.image}
+                        alt={p.title}
+                        class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
+                        loading="lazy"
+                      />
+                      {p.sold && (
+                        <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-ink text-bone text-[10px] tracking-[0.18em] uppercase">
+                          Sold
+                        </span>
+                      )}
+                      <div class="absolute bottom-3 right-3 flex flex-col items-end gap-1.5 pointer-events-none opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+                        <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                          {p.medium}
+                        </span>
+                        <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                          {p.width}×{p.height} cm
+                        </span>
+                      </div>
+                    </div>
+                    <div class="mt-3 grid grid-cols-12 gap-2 text-[11px] tracking-[0.2em] uppercase text-ink/65">
+                      <span class="col-span-6 md:col-span-7 truncate">{p.title}</span>
+                      <span class="col-span-2 text-ink/45">{p.year}</span>
+                      <span class={`col-span-4 md:col-span-3 text-right ${p.sold ? "text-ink" : "text-ink/85"}`}>{priceLabel}</span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      <!-- ===== Right rail (desktop only) ===== -->
+      <aside class="hidden lg:block min-w-0 relative">
+        <div class="sticky top-24 pt-32 pb-16">
+          <span class="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-4">
+            Series · {orderedSeries.length}
+          </span>
+          <ul class="flex flex-wrap gap-1.5">
+            {orderedSeries.map((s, i) => (
+              <li>
+                <a
+                  href={`#${s.slug}`}
+                  data-chip={s.slug}
+                  data-active={i === 0 ? "" : null}
+                  class="series-chip relative inline-flex items-center gap-1.5 h-9 px-3 rounded-full ring-1 ring-ink/15 text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 cursor-pointer overflow-hidden"
+                  style="--progress: 0;"
+                >
+                  <span class="relative z-10 chip-label">{s.label}</span>
+                  <span class="relative z-10 chip-count text-[10px] opacity-50 tabular-nums">({s.works.length})</span>
+                  <span class="chip-progress absolute left-0 right-0 bottom-0 h-[2px] origin-left pointer-events-none" aria-hidden="true"></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-bone border-t border-ink/15 mt-12 px-6 md:px-12 lg:px-16 xl:px-24 pt-12 md:pt-16 pb-32 md:pb-32 grid grid-cols-12 gap-6 md:gap-10 text-[11px] tracking-[0.2em] uppercase text-ink/60">
       <span class="col-span-12 md:col-span-4">© Vitaly Leshukov · 2026</span>
       <a href="/" class="col-span-6 md:col-span-4 hover:text-ink transition-colors duration-500">← Back to home</a>
       <span class="col-span-6 md:col-span-4 text-right">vitalityart.es</span>
@@ -206,24 +229,48 @@ const orderedSeries = seriesList
     animation-delay: calc(var(--i, 0) * 90ms);
     will-change: opacity, transform, filter;
   }
-  /* H2 mask-reveal triggered when section enters viewport */
   [data-anim-h2] .anim-line { animation-play-state: paused; }
   [data-anim-h2].is-animated .anim-line { animation-play-state: running; }
   @media (prefers-reduced-motion: reduce) {
     .anim-line { animation: none; opacity: 1; transform: none; filter: none; }
   }
 
-  /* Chip progress — only the active chip shows the bar */
+  /* ===== Series chips =====
+     Inactive: outlined pill (ring), ink/70 text, transparent bg.
+     Hover: ink text, subtle ink wash bg.
+     Active: solid ink bg, bone text — unambiguous regardless of surroundings.
+  */
+  .series-chip {
+    color: rgb(27 35 48 / 0.7);
+    background: transparent;
+  }
+  .series-chip:hover {
+    color: rgb(27 35 48);
+    background: rgb(27 35 48 / 0.04);
+  }
+  .series-chip[data-active] {
+    background: var(--color-ink);
+    color: var(--color-bone);
+    --ring-color: transparent;
+  }
+  .series-chip[data-active] .chip-count {
+    opacity: 0.6;
+  }
+  .series-chip[data-active] {
+    --tw-ring-color: transparent;
+    box-shadow: none;
+  }
+
+  /* Progress bar: only painted on active chip, GPU-cheap (transform on pseudo) */
   .chip-progress {
     background: transparent;
     transform: scaleX(0);
-    transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1), background-color 300ms;
   }
-  [data-chip][data-active] .chip-progress {
-    background: rgba(250, 250, 250, 0.18);
+  .series-chip[data-active] .chip-progress {
+    background: rgb(250 250 250 / 0.18);
     transform: scaleX(1);
   }
-  [data-chip][data-active] .chip-progress::after {
+  .series-chip[data-active] .chip-progress::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -245,44 +292,46 @@ const orderedSeries = seriesList
     requestAnimationFrame(raf);
   }
 
-  // === Series sections + chip anchor navigation ===
+  // Sections (one per series)
   const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-series-section]"));
+  // ALL chips (mobile bar + desktop rail share the same data-chip slugs)
   const chips = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-chip]"));
-  const chipBySlug = new Map<string, HTMLAnchorElement>();
-  for (const c of chips) chipBySlug.set(c.dataset.chip || "", c);
+  // Group chips by slug so we can update both mobile + desktop variants together
+  const chipsBySlug = new Map<string, HTMLAnchorElement[]>();
+  for (const c of chips) {
+    const slug = c.dataset.chip || "";
+    if (!chipsBySlug.has(slug)) chipsBySlug.set(slug, []);
+    chipsBySlug.get(slug)!.push(c);
+  }
+
+  let activeSlug = sections[0]?.dataset.seriesSlug || "";
 
   const setActive = (slug: string) => {
-    for (const c of chips) {
-      const isActive = c.dataset.chip === slug;
-      if (isActive) c.setAttribute("data-active", "");
-      else c.removeAttribute("data-active");
-      c.classList.toggle("bg-ink", isActive);
-      c.classList.toggle("text-bone", isActive);
-      c.classList.toggle("text-ink/65", !isActive);
-      c.classList.toggle("hover:text-ink", !isActive);
-      c.classList.toggle("hover:bg-ink/[0.05]", !isActive);
-      // Reset progress on inactive chips so they don't keep stale values
-      if (!isActive) c.style.setProperty("--progress", "0");
+    for (const [s, group] of chipsBySlug) {
+      const isActive = s === slug;
+      for (const chip of group) {
+        if (isActive) chip.setAttribute("data-active", "");
+        else {
+          chip.removeAttribute("data-active");
+          chip.style.setProperty("--progress", "0");
+        }
+      }
     }
-    // Keep the active chip in view in the horizontal scroller
-    const activeChip = chipBySlug.get(slug);
-    if (activeChip) {
-      activeChip.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    // Auto-center the active chip in the mobile horizontal scroller
+    const mobileChip = chipsBySlug.get(slug)?.find((c) =>
+      c.closest(".lg\\:hidden"),
+    );
+    if (mobileChip) {
+      mobileChip.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     }
   };
-
-  // Track which section is currently active (via "scroll line" ~30% from top)
-  let activeSlug = sections[0]?.dataset.seriesSlug || "";
 
   const updateActive = () => {
     const triggerLine = window.innerHeight * 0.3;
     let next = sections[0]?.dataset.seriesSlug || "";
     for (const sec of sections) {
       const rect = sec.getBoundingClientRect();
-      // The last section whose top is above the trigger line wins
-      if (rect.top <= triggerLine) {
-        next = sec.dataset.seriesSlug || next;
-      }
+      if (rect.top <= triggerLine) next = sec.dataset.seriesSlug || next;
     }
     if (next !== activeSlug) {
       activeSlug = next;
@@ -292,16 +341,14 @@ const orderedSeries = seriesList
 
   const updateProgress = () => {
     const sec = sections.find((s) => s.dataset.seriesSlug === activeSlug);
-    const chip = chipBySlug.get(activeSlug);
-    if (!sec || !chip) return;
+    const group = chipsBySlug.get(activeSlug);
+    if (!sec || !group) return;
     const rect = sec.getBoundingClientRect();
     const triggerLine = window.innerHeight * 0.3;
-    // Section progress: 0 when section.top hits triggerLine,
-    // 1 when section.bottom hits triggerLine (i.e. fully scrolled past).
     const total = rect.height;
     const passed = triggerLine - rect.top;
     const p = Math.max(0, Math.min(1, passed / total));
-    chip.style.setProperty("--progress", p.toFixed(3));
+    for (const chip of group) chip.style.setProperty("--progress", p.toFixed(3));
   };
 
   const tick = () => {
@@ -309,16 +356,12 @@ const orderedSeries = seriesList
     updateProgress();
   };
 
-  if (lenis) {
-    lenis.on("scroll", tick);
-  } else {
-    window.addEventListener("scroll", tick, { passive: true });
-  }
+  if (lenis) lenis.on("scroll", tick);
+  else window.addEventListener("scroll", tick, { passive: true });
   window.addEventListener("resize", tick);
-  // Initial paint
   requestAnimationFrame(tick);
 
-  // Hook chip clicks into smooth scroll (lenis if available)
+  // Smooth scroll on chip click
   for (const chip of chips) {
     chip.addEventListener("click", (e) => {
       const slug = chip.dataset.chip;
@@ -326,16 +369,13 @@ const orderedSeries = seriesList
       const target = document.getElementById(slug);
       if (!target) return;
       e.preventDefault();
-      if (lenis) {
-        lenis.scrollTo(target, { offset: -80, duration: 1.2 });
-      } else {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      if (lenis) lenis.scrollTo(target, { offset: -80, duration: 1.2 });
+      else target.scrollIntoView({ behavior: "smooth", block: "start" });
       history.replaceState(null, "", `#${slug}`);
     });
   }
 
-  // === H2 mask-reveal on scroll into view ===
+  // Section H2 reveal on enter
   const h2Els = document.querySelectorAll<HTMLElement>("[data-anim-h2]");
   if (h2Els.length && "IntersectionObserver" in window) {
     const io = new IntersectionObserver(
@@ -352,5 +392,12 @@ const orderedSeries = seriesList
     for (const el of h2Els) io.observe(el);
   } else {
     for (const el of h2Els) el.classList.add("is-animated");
+  }
+
+  // Honor URL hash on load: pre-activate that section's chip
+  const initialHash = window.location.hash.replace("#", "");
+  if (initialHash && chipsBySlug.has(initialHash)) {
+    activeSlug = initialHash;
+    setActive(initialHash);
   }
 </script>
