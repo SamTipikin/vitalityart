@@ -19,6 +19,9 @@ pnpm-debug.log*
 # os
 .DS_Store
 
+# import data (raw CSVs) — never committed
+imports/
+
 # editor
 .vscode/
 .idea/

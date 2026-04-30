@@ -4,11 +4,30 @@
 //   • soft-blur-in (per-character) for the hero name
 //   • mask-reveal-up (per-line) for the pull-quote and section H2s
 import Base from "~/layouts/Base.astro";
-import { paintings, artist, exhibitions, events } from "~/playground/_placeholders";
+import {
+  getAllPaintings,
+  getFeaturedPaintings,
+  getExhibitions,
+  paintingImageUrl,
+} from "~/lib/queries";
 
-const featured = paintings.slice(0, 4);
+// Pull live data from Sanity
+const [allPaintings, featuredFromSanity, exhibitions, events] = await Promise.all([
+  getAllPaintings(),
+  getFeaturedPaintings(6),
+  getExhibitions("exhibition"),
+  getExhibitions("event"),
+]);
+
+const featured = featuredFromSanity.slice(0, 4);   // hero rotator
+const featuredGrid = featuredFromSanity.slice(0, 6); // home grid
 const feature = featured[0];
-const featuredGrid = paintings.slice(0, 6);
+const totalWorks = allPaintings.length;
+
+// Hero artist content — bio lives in Sanity siteSettings later; hardcoded for now.
+const artistName = "Vitaly Leshukov";
+const artistBioShort =
+  "Born in the Urals, working today from Spain. After a coma in 2018, Vitaly returned to the canvas with a single conviction — that paint, large and unflinching, was the only honest record of being alive. The work since has been shown in Taipei, Dubai, Bordeaux, Lausanne, and Tokyo.";
 
 // Split helpers — keep template tidy
 const chars = (s: string) => Array.from(s);
@@ -16,16 +35,35 @@ const heroName1 = chars("Vitaly");
 const heroName2 = chars("Leshukov");
 const quoteLines = ["After the coma,", "the only thing left", "was color."];
 
-// Marquee — interleave paintings and exhibition labels
+// Marquee — interleave paintings and exhibition city labels (real data now)
 type MarqueeItem =
   | { kind: "painting"; src: string; alt: string }
   | { kind: "label"; text: string };
-const cities = ["Taipei 2024", "Dubai 2024", "Bordeaux 2024", "Lausanne 2023", "Tokyo 2023", "Madrid 2023", "Valencia 2022"];
+
+// Build labels from the real exhibitions: pick distinct city/year combos
+const exhibitionLabels = exhibitions
+  .slice(0, 8)
+  .map((e) => {
+    const year = e.date ? new Date(e.date).getFullYear() : "";
+    const place = (e.location || "").split(/[,(]/)[0].trim() || e.title;
+    return `${place} ${year}`.trim();
+  })
+  .filter(Boolean);
+
+// Marquee paintings — first 8 with images
+const marqueePaintings = allPaintings
+  .filter((p) => p.image)
+  .slice(0, 8);
+
 const marqueeItems: MarqueeItem[] = [];
-const _max = Math.max(paintings.length, cities.length);
+const _max = Math.max(marqueePaintings.length, exhibitionLabels.length);
 for (let i = 0; i < _max; i++) {
-  if (i < paintings.length) marqueeItems.push({ kind: "painting", src: paintings[i].image, alt: paintings[i].title });
-  if (i < cities.length) marqueeItems.push({ kind: "label", text: cities[i] });
+  const p = marqueePaintings[i];
+  if (p) {
+    const src = paintingImageUrl(p, { width: 600, quality: 80 });
+    if (src) marqueeItems.push({ kind: "painting", src, alt: p.title });
+  }
+  if (i < exhibitionLabels.length) marqueeItems.push({ kind: "label", text: exhibitionLabels[i] });
 }
 ---
 
@@ -92,23 +130,27 @@ for (let i = 0; i < _max; i++) {
         <!-- Feature painting — auto-rotating cross-fade through 4 works -->
         <figure class="col-span-12 md:col-span-7 md:h-full md:min-h-0" data-hero-rotator>
           <div class="relative aspect-[4/5] md:aspect-auto md:h-[calc(100%-2rem)] overflow-hidden bg-ink/[0.04]">
-            {featured.map((p, i) => (
-              <img
-                src={p.image}
-                alt={`${p.title}, oil on canvas, by Vitaly Leshukov`}
-                class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1100ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${i === 0 ? "opacity-100" : "opacity-0"}`}
-                data-hero-slide={i}
-                data-year={p.year}
-                data-dims={`${p.width}×${p.height} cm`}
-                fetchpriority={i === 0 ? "high" : "auto"}
-                loading={i === 0 ? "eager" : "lazy"}
-              />
-            ))}
+            {featured.map((p, i) => {
+              const src = paintingImageUrl(p, { width: 1600, quality: 85 }) ?? "";
+              const dims = p.dimensions ? `${p.dimensions.width}×${p.dimensions.height} cm` : "";
+              return (
+                <img
+                  src={src}
+                  alt={`${p.title}, oil on canvas, by Vitaly Leshukov`}
+                  class={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1100ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${i === 0 ? "opacity-100" : "opacity-0"}`}
+                  data-hero-slide={i}
+                  data-year={p.year}
+                  data-dims={dims}
+                  fetchpriority={i === 0 ? "high" : "auto"}
+                  loading={i === 0 ? "eager" : "lazy"}
+                />
+              );
+            })}
           </div>
           <div class="mt-3 md:mt-4 flex items-baseline justify-between text-[11px] tracking-[0.2em] uppercase text-ink/65">
-            <span data-hero-title>{feature.title}</span>
-            <span class="hidden md:inline" data-hero-year>{feature.year}</span>
-            <span data-hero-dims>{feature.width}×{feature.height} cm</span>
+            <span data-hero-title>{feature?.title}</span>
+            <span class="hidden md:inline" data-hero-year>{feature?.year}</span>
+            <span data-hero-dims>{feature?.dimensions ? `${feature.dimensions.width}×${feature.dimensions.height} cm` : ""}</span>
           </div>
         </figure>
 
@@ -199,7 +241,7 @@ for (let i = 0; i < _max; i++) {
           </h2>
           <div class="mt-10 md:mt-14 text-[16px] md:text-[18px] leading-[1.7] text-ink/85 max-w-2xl space-y-5">
             <p class="first-letter:font-display first-letter:text-7xl first-letter:float-left first-letter:leading-[0.9] first-letter:mr-3 first-letter:mt-1 first-letter:uppercase">
-              {artist.bioShort}
+              {artistBioShort}
             </p>
             <p class="text-ink/55 italic">
               [Placeholder. Long-form bio expands here — coma story, return to painting,
@@ -256,7 +298,7 @@ for (let i = 0; i < _max; i++) {
             href="/gallery"
             class="col-span-12 md:col-span-2 text-[11px] tracking-[0.2em] uppercase border-b border-bone pb-1 hover:opacity-60 transition-opacity duration-500 self-start"
           >
-            See all 55 →
+            See all {totalWorks} →
           </a>
         </div>
 
@@ -265,44 +307,47 @@ for (let i = 0; i < _max; i++) {
           {featuredGrid.map((p, i) => {
             const span = i === 0 ? "md:col-span-7" : i === 1 ? "md:col-span-5" : i === 2 ? "md:col-span-4" : i === 3 ? "md:col-span-8" : i === 4 ? "md:col-span-5" : "md:col-span-7";
             const offset = i === 4 ? "md:mt-32" : i === 3 ? "md:mt-48" : i === 5 ? "md:mt-16" : i === 1 ? "md:mt-12" : "";
-            // Card-level parallax — alternating, stronger range (~ ±70px y-translate)
             const cardSpeed = [0.40, -0.55, 0.65, -0.40, 0.50, -0.60][i % 6];
-            // Intra-card image parallax — image is larger than wrapper
             const imgSpeed = [-0.18, 0.14, -0.12, 0.20, -0.16, 0.12][i % 6];
             const priceLabel = p.sold
               ? "Sold"
               : p.price
                 ? `$${p.price.toLocaleString()}`
                 : "Contact for price";
+            const src = paintingImageUrl(p, { width: 1200, quality: 80 });
+            const dimensionLabel = p.dimensions ? `${p.dimensions.width}×${p.dimensions.height} cm` : "";
             return (
               <a
-                href={`/gallery/${p.title.toLowerCase().replace(/\s+/g, "-")}`}
+                href={`/gallery/${p.slug.current}`}
                 class={`tilt-card col-span-12 ${span} ${offset} group block will-change-transform`}
                 data-parallax-card
                 data-speed={cardSpeed}
                 data-tilt
               >
                 <div class="tilt-inner relative aspect-[4/5] overflow-hidden bg-bone/[0.04]">
-                  {/* Image is intentionally larger than wrapper so parallax-y stays inside the frame */}
-                  <img
-                    src={p.image}
-                    alt={p.title}
-                    class="absolute inset-0 w-full h-[120%] -top-[10%] object-cover will-change-transform"
-                    loading="lazy"
-                    data-parallax-img
-                    data-speed={imgSpeed}
-                  />
-                  {/* Floating chips — top-right of image, fade in on hover */}
+                  {src && (
+                    <img
+                      src={src}
+                      alt={p.title}
+                      class="absolute inset-0 w-full h-[120%] -top-[10%] object-cover will-change-transform"
+                      loading="lazy"
+                      data-parallax-img
+                      data-speed={imgSpeed}
+                    />
+                  )}
                   <div class="absolute top-3 right-3 md:top-4 md:right-4 flex flex-col items-end gap-1.5 pointer-events-none opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
-                    <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
-                      {p.medium}
-                    </span>
-                    <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
-                      {p.width}×{p.height} cm
-                    </span>
+                    {p.medium && (
+                      <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                        {p.medium}
+                      </span>
+                    )}
+                    {dimensionLabel && (
+                      <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                        {dimensionLabel}
+                      </span>
+                    )}
                   </div>
                 </div>
-                {/* Caption + price row */}
                 <div class="mt-4 grid grid-cols-12 gap-2 text-[11px] tracking-[0.2em] uppercase text-bone/70">
                   <span class="col-span-7 truncate">{p.title}</span>
                   <span class="col-span-2 text-bone/45">{p.year}</span>
@@ -368,24 +413,30 @@ for (let i = 0; i < _max; i++) {
 
       {/* Events panel (default visible) */}
       <ol class="border-t border-ink/15" data-tab-panel="events">
-        {events.map((e) => (
-          <li class="grid grid-cols-12 gap-4 md:gap-6 px-6 md:px-10 py-5 md:py-7 border-b border-ink/15">
-            <span class="col-span-2 md:col-span-1 font-display text-2xl md:text-3xl tracking-display">{e.year}</span>
-            <span class="col-span-10 md:col-span-7 text-[15px] md:text-lg">{e.title}</span>
-            <span class="col-span-12 md:col-span-4 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-left md:text-right">{e.location}</span>
-          </li>
-        ))}
+        {events.map((e) => {
+          const year = e.date ? new Date(e.date).getFullYear() : "";
+          return (
+            <li class="grid grid-cols-12 gap-4 md:gap-6 px-6 md:px-10 py-5 md:py-7 border-b border-ink/15">
+              <span class="col-span-2 md:col-span-1 font-display text-2xl md:text-3xl tracking-display">{year}</span>
+              <span class="col-span-10 md:col-span-7 text-[15px] md:text-lg">{e.title}</span>
+              <span class="col-span-12 md:col-span-4 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-left md:text-right">{e.location}</span>
+            </li>
+          );
+        })}
       </ol>
 
       {/* Exhibitions panel */}
       <ol class="border-t border-ink/15 hidden" data-tab-panel="exhibitions">
-        {exhibitions.map((e) => (
-          <li class="grid grid-cols-12 gap-4 md:gap-6 px-6 md:px-10 py-5 md:py-7 border-b border-ink/15">
-            <span class="col-span-2 md:col-span-1 font-display text-2xl md:text-3xl tracking-display">{e.year}</span>
-            <span class="col-span-10 md:col-span-7 text-[15px] md:text-lg">{e.title}</span>
-            <span class="col-span-12 md:col-span-4 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-left md:text-right">{e.location}</span>
-          </li>
-        ))}
+        {exhibitions.map((e) => {
+          const year = e.date ? new Date(e.date).getFullYear() : "";
+          return (
+            <li class="grid grid-cols-12 gap-4 md:gap-6 px-6 md:px-10 py-5 md:py-7 border-b border-ink/15">
+              <span class="col-span-2 md:col-span-1 font-display text-2xl md:text-3xl tracking-display">{year}</span>
+              <span class="col-span-10 md:col-span-7 text-[15px] md:text-lg">{e.title}</span>
+              <span class="col-span-12 md:col-span-4 text-[11px] tracking-[0.2em] uppercase text-ink/60 self-center text-left md:text-right">{e.location}</span>
+            </li>
+          );
+        })}
       </ol>
     </section>
 

@@ -8,17 +8,34 @@
 // Chips act as anchor navigation — clicking scrolls to the section.
 // Currently in-view section is the active chip and shows a progress bar.
 import Base from "~/layouts/Base.astro";
-import { paintings, seriesList, seriesSlug, type PlaceholderPainting } from "~/playground/_placeholders";
+import {
+  getAllPaintings,
+  getAllSeries,
+  paintingImageUrl,
+  type Painting,
+} from "~/lib/queries";
 
-const grouped = new Map<string, PlaceholderPainting[]>();
+const [paintings, allSeries] = await Promise.all([
+  getAllPaintings(),
+  getAllSeries(),
+]);
+
+// Group paintings by series slug
+const grouped = new Map<string, Painting[]>();
 for (const p of paintings) {
-  const slug = seriesSlug(p.series);
+  const slug = p.series?.slug.current;
+  if (!slug) continue;
   if (!grouped.has(slug)) grouped.set(slug, []);
   grouped.get(slug)!.push(p);
 }
 
-const orderedSeries = seriesList
-  .map((s) => ({ ...s, works: grouped.get(s.slug) ?? [] }))
+// Order sections by Sanity series.order, drop any with zero paintings
+const orderedSeries = allSeries
+  .map((s) => ({
+    slug: s.slug.current,
+    label: s.title,
+    works: grouped.get(s.slug.current) ?? [],
+  }))
   .filter((s) => s.works.length > 0);
 ---
 
@@ -136,28 +153,35 @@ const orderedSeries = seriesList
                   : p.price
                     ? `$${p.price.toLocaleString()}`
                     : "Contact for price";
-                const slug = `${seriesSlug(p.title)}-${p.year}`;
+                const src = paintingImageUrl(p, { width: 800, quality: 80 });
+                const dimensionLabel = p.dimensions ? `${p.dimensions.width}×${p.dimensions.height} cm` : "";
                 return (
-                  <a href={`/gallery/${slug}`} class="tilt-card group block" data-tilt data-sold={p.sold ? "true" : "false"}>
+                  <a href={`/gallery/${p.slug.current}`} class="tilt-card group block" data-tilt data-sold={p.sold ? "true" : "false"}>
                     <div class="tilt-inner relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
-                      <img
-                        src={p.image}
-                        alt={p.title}
-                        class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
-                        loading="lazy"
-                      />
+                      {src && (
+                        <img
+                          src={src}
+                          alt={p.title}
+                          class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
+                          loading="lazy"
+                        />
+                      )}
                       {p.sold && (
                         <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-ink text-bone text-[10px] tracking-[0.18em] uppercase">
                           Sold
                         </span>
                       )}
                       <div class="absolute bottom-3 right-3 flex flex-col items-end gap-1.5 pointer-events-none opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
-                        <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
-                          {p.medium}
-                        </span>
-                        <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
-                          {p.width}×{p.height} cm
-                        </span>
+                        {p.medium && (
+                          <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                            {p.medium}
+                          </span>
+                        )}
+                        {dimensionLabel && (
+                          <span class="px-2.5 py-1 rounded-full bg-bone/90 backdrop-blur-md ring-1 ring-ink/10 text-[10px] tracking-[0.18em] uppercase text-ink">
+                            {dimensionLabel}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div class="mt-3 grid grid-cols-12 gap-2 text-[11px] tracking-[0.2em] uppercase text-ink/65">

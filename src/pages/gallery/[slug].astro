@@ -4,26 +4,32 @@
 // once the CSV import lands.
 import type { GetStaticPaths } from "astro";
 import Base from "~/layouts/Base.astro";
-import { paintings, seriesSlug, type PlaceholderPainting } from "~/playground/_placeholders";
+import {
+  getAllPaintings,
+  getRelatedPaintings,
+  paintingImageUrl,
+  type Painting,
+} from "~/lib/queries";
 
-export const getStaticPaths = (() => {
+export const getStaticPaths = (async () => {
+  const paintings = await getAllPaintings();
   return paintings.map((p) => ({
-    params: { slug: `${seriesSlug(p.title)}-${p.year}` },
+    params: { slug: p.slug.current },
     props: { painting: p },
   }));
 }) satisfies GetStaticPaths;
 
-interface Props { painting: PlaceholderPainting }
-const { painting } = Astro.props;
-const p = painting;
+interface Props { painting: Painting }
+const { painting: p } = Astro.props;
 
-// Aspect ratio from real dimensions for accurate layout
-const aspectRatio = p.width / p.height; // > 1 = landscape
+// Fetch related works in the same series at request time so the build
+// uses actual Sanity data rather than the prop snapshot.
+const related = await getRelatedPaintings(p.series?._id, p.slug.current, 6);
 
-// Related works in the same series, excluding the current painting
-const related = paintings
-  .filter((x) => x.series === p.series && x.title !== p.title)
-  .slice(0, 6);
+// Aspect ratio from real dimensions, with a sensible fallback
+const aspectRatio = p.dimensions?.width && p.dimensions?.height
+  ? p.dimensions.width / p.dimensions.height
+  : 4 / 5;
 
 const priceLabel = p.sold
   ? "Sold"
@@ -31,15 +37,20 @@ const priceLabel = p.sold
     ? `$${p.price.toLocaleString()} USD`
     : "Contact for price";
 
-const seriesUrl = `/gallery#${seriesSlug(p.series)}`;
+const seriesUrl = p.series?.slug.current ? `/gallery#${p.series.slug.current}` : "/gallery";
+const seriesLabel = p.series?.title ?? "Uncategorized";
 
-// Description copy — the real text comes from Sanity once imported.
-const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From the ${p.series} series — part of an ongoing exploration of ${p.series.toLowerCase()} as subject and gesture.`;
+const description = p.description
+  ?? `${p.medium ?? "Oil on canvas"}${p.year ? `, ${p.year}` : ""}.${
+    p.dimensions ? ` ${p.dimensions.width}×${p.dimensions.height} cm.` : ""
+  }${p.series ? ` From the ${p.series.title} series.` : ""}`;
+
+const heroImageUrl = paintingImageUrl(p, { width: 2000, quality: 90 });
 ---
 
 <Base
   title={`${p.title} — Vitaly Leshukov`}
-  description={`${p.title} (${p.year}). Oil on canvas, ${p.width}×${p.height} cm. From the ${p.series} series.`}
+  description={`${p.title}${p.year ? ` (${p.year})` : ""}. ${p.medium ?? "Oil on canvas"}${p.dimensions ? `, ${p.dimensions.width}×${p.dimensions.height} cm` : ""}.${p.series ? ` From the ${p.series.title} series.` : ""}`}
 >
   <main class="bg-bone text-ink min-h-screen">
     <!-- Floating bottom nav -->
@@ -81,7 +92,7 @@ const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From 
       <nav class="text-[11px] tracking-[0.2em] uppercase text-ink/55 flex flex-wrap items-center gap-2">
         <a href="/gallery" class="hover:text-ink transition-colors duration-300">Gallery</a>
         <span>/</span>
-        <a href={seriesUrl} class="hover:text-ink transition-colors duration-300">{p.series}</a>
+        <a href={seriesUrl} class="hover:text-ink transition-colors duration-300">{seriesLabel}</a>
         <span>/</span>
         <span class="text-ink">{p.title}</span>
       </nav>
@@ -99,13 +110,15 @@ const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From 
             style={`aspect-ratio: ${aspectRatio};`}
             data-zoom
           >
-            <img
-              src={p.image}
-              alt={`${p.title}, oil on canvas, by Vitaly Leshukov`}
-              class="zoom-img absolute inset-0 w-full h-full object-cover"
-              fetchpriority="high"
-              data-zoom-img
-            />
+            {heroImageUrl && (
+              <img
+                src={heroImageUrl}
+                alt={`${p.title}, oil on canvas, by Vitaly Leshukov`}
+                class="zoom-img absolute inset-0 w-full h-full object-cover"
+                fetchpriority="high"
+                data-zoom-img
+              />
+            )}
             {p.sold && (
               <span class="absolute top-4 right-4 md:top-6 md:right-6 px-3 py-1.5 rounded-full bg-ink text-bone text-[11px] tracking-[0.18em] uppercase pointer-events-none z-10">
                 Sold
@@ -121,7 +134,7 @@ const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From 
         <!-- Metadata sidebar -->
         <aside class="col-span-12 lg:col-span-4 xl:col-span-3 lg:sticky lg:top-12">
           <span class="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-3">
-            <a href={seriesUrl} class="hover:text-ink transition-colors duration-300">{p.series}</a>
+            <a href={seriesUrl} class="hover:text-ink transition-colors duration-300">{seriesLabel}</a>
           </span>
           <h1 class="font-display tracking-[-0.02em] uppercase leading-[0.92] text-[10vw] md:text-5xl lg:text-[3.2vw] xl:text-[2.6vw]" data-anim-h2>
             <span class="sr-only">{p.title}</span>
@@ -135,7 +148,7 @@ const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From 
             {[
               ["Year",       String(p.year ?? "—")],
               ["Medium",     p.medium ?? "Oil on canvas"],
-              ["Dimensions", `${p.width} × ${p.height} cm`],
+              ["Dimensions", p.dimensions ? `${p.dimensions.width} × ${p.dimensions.height} cm` : "—"],
               ["Price",      priceLabel],
             ].map(([k, v]) => (
               <div class="grid grid-cols-12 gap-3 py-3.5 border-b border-ink/15">
@@ -180,7 +193,7 @@ const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From 
       <section class="border-t border-ink/15 px-6 md:px-12 lg:px-16 xl:px-24 py-20 md:py-28">
         <div class="grid grid-cols-12 gap-6 md:gap-10 items-end mb-10 md:mb-14">
           <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
-            Related · {p.series}
+            Related · {seriesLabel}
           </span>
           <h2 class="col-span-12 md:col-span-7 font-display tracking-[-0.02em] uppercase leading-[0.92] text-[10vw] md:text-[5vw]" data-anim-h2>
             <span class="sr-only">More from this series</span>
@@ -198,17 +211,19 @@ const description = `Oil on canvas, ${p.year}. ${p.width}×${p.height} cm. From 
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-16">
           {related.map((rel) => {
-            const relSlug = `${seriesSlug(rel.title)}-${rel.year}`;
             const relPrice = rel.sold ? "Sold" : rel.price ? `$${rel.price.toLocaleString()}` : "Contact for price";
+            const relSrc = paintingImageUrl(rel, { width: 800, quality: 80 });
             return (
-              <a href={`/gallery/${relSlug}`} class="tilt-card group block" data-tilt>
+              <a href={`/gallery/${rel.slug.current}`} class="tilt-card group block" data-tilt>
                 <div class="tilt-inner relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
-                  <img
-                    src={rel.image}
-                    alt={rel.title}
-                    class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
-                    loading="lazy"
-                  />
+                  {relSrc && (
+                    <img
+                      src={relSrc}
+                      alt={rel.title}
+                      class="absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
+                      loading="lazy"
+                    />
+                  )}
                   {rel.sold && (
                     <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-ink text-bone text-[10px] tracking-[0.18em] uppercase">
                       Sold
