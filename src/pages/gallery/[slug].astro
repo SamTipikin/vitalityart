@@ -51,6 +51,9 @@ const heroImageUrl = paintingImageUrl(p, { width: 2000, quality: 90 });
 <Base
   title={`${p.title} — Vitaly Leshukov`}
   description={`${p.title}${p.year ? ` (${p.year})` : ""}. ${p.medium ?? "Oil on canvas"}${p.dimensions ? `, ${p.dimensions.width}×${p.dimensions.height} cm` : ""}.${p.series ? ` From the ${p.series.title} series.` : ""}`}
+  ogImage={paintingImageUrl(p, { width: 1200, quality: 85 }) ?? undefined}
+  ogImageAlt={`${p.title}, by Vitaly Leshukov`}
+  ogType="article"
 >
   <main class="bg-bone text-ink min-h-screen">
     <!-- Floating bottom nav -->

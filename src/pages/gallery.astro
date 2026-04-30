@@ -37,11 +37,17 @@ const orderedSeries = allSeries
     works: grouped.get(s.slug.current) ?? [],
   }))
   .filter((s) => s.works.length > 0);
+
+// OG preview — use the first painting with an image
+const ogPainting = paintings.find((p) => p.image);
+const ogImageUrl = ogPainting ? paintingImageUrl(ogPainting, { width: 1200, quality: 80 }) : undefined;
 ---
 
 <Base
   title="Gallery — Vitaly Leshukov"
   description={`The full catalogue of paintings by Vitaly Leshukov. ${paintings.length} works in oil on canvas across ${orderedSeries.length} series.`}
+  ogImage={ogImageUrl ?? undefined}
+  ogImageAlt={ogPainting ? `${ogPainting.title}, by Vitaly Leshukov` : undefined}
 >
   <main class="bg-bone text-ink min-h-screen">
     <!-- Floating bottom nav -->

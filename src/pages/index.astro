@@ -26,6 +26,11 @@ const featuredGrid = featuredFromSanity.slice(0, 6); // home grid
 const feature = featured[0];
 const totalWorks = allPaintings.length;
 
+// Use the first featured painting's image as the home page OG preview.
+// Sanity's image URL builder gives us a sized 1200×630 crop for free.
+const homeOgImage = (feature && paintingImageUrl(feature, { width: 1200, quality: 80 })) || undefined;
+const homeOgAlt = feature ? `${feature.title}, by Vitaly Leshukov` : "Vitaly Leshukov — paintings";
+
 // Hero artist content — bio lives in Sanity siteSettings later; hardcoded for now.
 const artistName = "Vitaly Leshukov";
 const artistBioShort =
@@ -72,6 +77,8 @@ for (let i = 0; i < _max; i++) {
 <Base
   title="Vitaly Leshukov — Painter"
   description="Vitaly Leshukov is a Spanish-based contemporary painter. Oil on canvas. Exhibited in Taipei, Dubai, Bordeaux, Lausanne, Tokyo."
+  ogImage={homeOgImage}
+  ogImageAlt={homeOgAlt}
 >
   <!-- Fixed gallery overlay — fades in/out as the works section enters/leaves view -->
   <div

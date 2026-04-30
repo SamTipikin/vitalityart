@@ -4,14 +4,26 @@ import "~/styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;            // absolute URL preferred; relative gets resolved against site
+  ogImageAlt?: string;
+  ogType?: "website" | "article";
 }
 
 const {
   title = "Vitaly Leshukov — Painter",
   description = "Paintings by Vitaly Leshukov. Spanish-based contemporary artist working in oil and mixed media.",
+  ogImage,
+  ogImageAlt = "Vitaly Leshukov — paintings, oil on canvas",
+  ogType = "website",
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+
+// Resolve OG image: explicit prop wins; otherwise use the bundled default
+// in /public/og-default.jpg (we'll add the file in a later step if missing).
+const resolvedOgImage = ogImage
+  ? (ogImage.startsWith("http") ? ogImage : new URL(ogImage, Astro.site).toString())
+  : new URL("/og-default.jpg", Astro.site).toString();
 ---
 
 <!doctype html>
@@ -30,11 +42,24 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
       rel="stylesheet"
     />
 
+    {/* Open Graph */}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={resolvedOgImage} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Vitaly Leshukov" />
+    <meta property="og:locale" content="en_US" />
+
+    {/* Twitter */}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={resolvedOgImage} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
 
     <link rel="sitemap" href="/sitemap-index.xml" />
   </head>
