@@ -146,7 +146,9 @@ const orderedSeries = allSeries
               </h2>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-20">
+            {/* CSS columns = true masonry. Each card breaks naturally on its own height
+                so paintings keep their real proportions. Reading order is top-down per column. */}
+            <div class="columns-1 md:columns-2 lg:columns-3 gap-x-6 md:gap-x-8 [column-fill:_balance]">
               {s.works.map((p) => {
                 const priceLabel = p.sold
                   ? "Sold"
@@ -155,9 +157,13 @@ const orderedSeries = allSeries
                     : "Contact for price";
                 const src = paintingImageUrl(p, { width: 800, quality: 80 });
                 const dimensionLabel = p.dimensions ? `${p.dimensions.width}×${p.dimensions.height} cm` : "";
+                // Use the painting's real aspect ratio; fall back to 4:5 if dims missing
+                const aspect = p.dimensions?.width && p.dimensions?.height
+                  ? p.dimensions.width / p.dimensions.height
+                  : 4 / 5;
                 return (
-                  <a href={`/gallery/${p.slug.current}`} class="tilt-card group block" data-tilt data-sold={p.sold ? "true" : "false"}>
-                    <div class="tilt-inner relative aspect-[4/5] overflow-hidden bg-ink/[0.04]">
+                  <a href={`/gallery/${p.slug.current}`} class="tilt-card group block break-inside-avoid mb-12 md:mb-20" data-tilt data-sold={p.sold ? "true" : "false"}>
+                    <div class="tilt-inner relative overflow-hidden bg-ink/[0.04]" style={`aspect-ratio: ${aspect};`}>
                       {src && (
                         <img
                           src={src}
