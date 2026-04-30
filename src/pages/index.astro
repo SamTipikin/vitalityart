@@ -11,6 +11,8 @@ import {
   paintingImageUrl,
 } from "~/lib/queries";
 
+const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY;
+
 // Pull live data from Sanity
 const [allPaintings, featuredFromSanity, exhibitions, events] = await Promise.all([
   getAllPaintings(),
@@ -466,7 +468,76 @@ for (let i = 0; i < _max; i++) {
             with galleries and private collectors. Write below — every message is
             read and replied to.
           </p>
-          <p class="mt-12 text-ink/55 italic">[Placeholder. Web3Forms-backed form goes here in Phase 5.]</p>
+
+          <form
+            class="mt-14 md:mt-20 max-w-xl"
+            data-contact-form
+            method="POST"
+            action="https://api.web3forms.com/submit"
+            novalidate
+          >
+            {/* Web3Forms config */}
+            <input type="hidden" name="access_key" value={web3formsKey} />
+            <input type="hidden" name="from_name" value="Vitality Art — Website" />
+            <input type="hidden" name="subject" value="New inquiry from vitalityart.es" />
+            <input type="hidden" name="cc" value="themadd228@gmail.com" />
+            <input type="hidden" name="redirect" value="false" />
+            {/* Honeypot — bots fill this, humans don't see it */}
+            <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" />
+            {/* Hidden context — auto-filled if user came from a PDP "Acquire" link with ?painting=… */}
+            <input type="hidden" name="painting_reference" value="" data-painting-ref />
+
+            <div class="flex flex-col gap-8 md:gap-10">
+              <label class="block">
+                <span class="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-2">Name</span>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  autocomplete="name"
+                  class="block w-full pb-3 text-[16px] md:text-[18px] bg-transparent border-b border-ink/20 focus:border-ink outline-none transition-colors duration-300"
+                />
+              </label>
+
+              <label class="block">
+                <span class="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-2">Email</span>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  autocomplete="email"
+                  class="block w-full pb-3 text-[16px] md:text-[18px] bg-transparent border-b border-ink/20 focus:border-ink outline-none transition-colors duration-300"
+                />
+              </label>
+
+              <label class="block">
+                <span class="block text-[11px] tracking-[0.2em] uppercase text-ink/55 mb-2">Message</span>
+                <textarea
+                  name="message"
+                  required
+                  rows="5"
+                  class="block w-full pb-3 text-[16px] md:text-[18px] bg-transparent border-b border-ink/20 focus:border-ink outline-none transition-colors duration-300 resize-none"
+                ></textarea>
+              </label>
+            </div>
+
+            <div class="mt-10 md:mt-12 flex items-center gap-6 flex-wrap">
+              <button
+                type="submit"
+                class="group inline-flex items-center h-12 gap-3 pl-5 pr-1.5 rounded-full bg-ink text-bone hover:bg-ink/90 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-[11px] tracking-[0.2em] uppercase cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                data-submit-btn
+              >
+                <span data-submit-label>Send message</span>
+                <span class="w-9 h-9 rounded-full bg-bone/15 grid place-items-center text-bone group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">↗</span>
+              </button>
+              <p class="text-[11px] tracking-[0.2em] uppercase text-ink/45 hidden" data-form-status></p>
+            </div>
+
+            {/* Painting context indicator (hidden by default; shown when ?painting= URL param is present) */}
+            <p class="mt-6 text-[11px] tracking-[0.2em] uppercase text-ink/55 hidden" data-painting-context>
+              Inquiring about: <span data-painting-name class="text-ink"></span>
+            </p>
+          </form>
         </div>
       </div>
     </section>
@@ -880,6 +951,70 @@ for (let i = 0; i < _max; i++) {
       { rootMargin: "-40% 0px -40% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
     sections.forEach((s) => navIo.observe(s));
+  }
+
+  // === Contact form (Web3Forms) ===
+  const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
+  if (form) {
+    const statusEl = form.querySelector<HTMLElement>("[data-form-status]");
+    const submitBtn = form.querySelector<HTMLButtonElement>("[data-submit-btn]");
+    const submitLabel = form.querySelector<HTMLElement>("[data-submit-label]");
+
+    // If the URL has ?painting=… (from PDP "Acquire" link), prefill context
+    const params = new URLSearchParams(window.location.search);
+    const painting = params.get("painting");
+    if (painting) {
+      const ctxEl = form.querySelector<HTMLElement>("[data-painting-context]");
+      const nameEl = form.querySelector<HTMLElement>("[data-painting-name]");
+      const refInput = form.querySelector<HTMLInputElement>("[data-painting-ref]");
+      if (ctxEl) ctxEl.classList.remove("hidden");
+      if (nameEl) nameEl.textContent = painting;
+      if (refInput) refInput.value = painting;
+      // Pre-fill the message body with a friendly opener
+      const msg = form.querySelector<HTMLTextAreaElement>('textarea[name="message"]');
+      if (msg && !msg.value) msg.value = `Hi Vitaly,\n\nI'm interested in "${painting}". `;
+    }
+
+    const setStatus = (text: string, kind: "ok" | "err" | "info") => {
+      if (!statusEl) return;
+      statusEl.textContent = text;
+      statusEl.classList.remove("hidden", "text-ink/45", "text-ink", "text-[#a83232]");
+      statusEl.classList.add(
+        kind === "ok"  ? "text-ink"
+        : kind === "err" ? "text-[#a83232]"
+        : "text-ink/45",
+      );
+    };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!submitBtn) return;
+      submitBtn.disabled = true;
+      if (submitLabel) submitLabel.textContent = "Sending…";
+      setStatus("", "info");
+
+      try {
+        const data = new FormData(form);
+        const res = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          body: data,
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          form.reset();
+          if (submitLabel) submitLabel.textContent = "Sent ✓";
+          setStatus("Thanks — Vitaly will reply within a few days.", "ok");
+        } else {
+          submitBtn.disabled = false;
+          if (submitLabel) submitLabel.textContent = "Send message";
+          setStatus(json.message || "Something went wrong. Try again or email viacatalana@gmail.com.", "err");
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        if (submitLabel) submitLabel.textContent = "Send message";
+        setStatus("Network error. Try again or email viacatalana@gmail.com.", "err");
+      }
+    });
   }
 
   // === Events / Exhibitions tabs ===

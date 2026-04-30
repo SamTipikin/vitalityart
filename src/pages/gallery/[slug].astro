@@ -161,7 +161,7 @@ const heroImageUrl = paintingImageUrl(p, { width: 2000, quality: 90 });
           <!-- Acquire CTA -->
           {!p.sold && (
             <a
-              href={`/#contact?painting=${encodeURIComponent(p.title)}`}
+              href={`/?painting=${encodeURIComponent(p.title)}#contact`}
               class="group mt-8 inline-flex items-center h-12 gap-3 pl-5 pr-1.5 rounded-full bg-ink text-bone hover:bg-ink/90 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] text-[11px] tracking-[0.2em] uppercase"
             >
               <span>{p.price ? "Acquire" : "Inquire"}</span>
