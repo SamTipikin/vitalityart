@@ -316,6 +316,10 @@ for (let i = 0; i < _max; i++) {
                 : "Contact for price";
             const src = paintingImageUrl(p, { width: 1200, quality: 80 });
             const dimensionLabel = p.dimensions ? `${p.dimensions.width}×${p.dimensions.height} cm` : "";
+            // Real aspect ratio from the painting's dimensions
+            const aspect = p.dimensions?.width && p.dimensions?.height
+              ? p.dimensions.width / p.dimensions.height
+              : 4 / 5;
             return (
               <a
                 href={`/gallery/${p.slug.current}`}
@@ -324,7 +328,7 @@ for (let i = 0; i < _max; i++) {
                 data-speed={cardSpeed}
                 data-tilt
               >
-                <div class="tilt-inner relative aspect-[4/5] overflow-hidden bg-bone/[0.04]">
+                <div class="tilt-inner relative overflow-hidden bg-bone/[0.04]" style={`aspect-ratio: ${aspect};`}>
                   {src && (
                     <img
                       src={src}
