@@ -18,6 +18,7 @@ const {
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const lang = Astro.url.pathname.startsWith("/es") ? "es" : "en";
 
 // Resolve OG image: explicit prop wins; otherwise use the bundled default
 // in /public/og-default.jpg (we'll add the file in a later step if missing).
@@ -27,7 +28,7 @@ const resolvedOgImage = ogImage
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
