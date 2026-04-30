@@ -19,6 +19,9 @@ pnpm-debug.log*
 # os
 .DS_Store
 
+# skill clones (reference only, not shipped)
+skills/
+
 # editor
 .vscode/
 .idea/

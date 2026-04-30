@@ -1,13 +1,20 @@
 ---
-// Variant F — locked direction. Now extended into a full home-page skeleton
-// so we can see the editorial flow: Hero → Origins → Featured → Exhibitions → Contact → Footer.
-// Each section below the hero is a structural placeholder we'll iterate on next.
+// Variant F — locked direction. Full home-page skeleton +
+// text-animation patterns from the animate-text skill:
+//   • soft-blur-in (per-character) for the hero name
+//   • mask-reveal-up (per-line) for the pull-quote and section H2s
 import Base from "~/layouts/Base.astro";
 import { paintings, artist, exhibitions } from "~/playground/_placeholders";
 
 const featured = paintings.slice(0, 4);
 const feature = featured[0];
 const featuredGrid = paintings.slice(0, 6);
+
+// Split helpers — keep template tidy
+const chars = (s: string) => Array.from(s);
+const heroName1 = chars("Vitaly");
+const heroName2 = chars("Leshukov");
+const quoteLines = ["After the coma,", "the only thing left", "was color."];
 ---
 
 <Base
@@ -64,13 +71,30 @@ const featuredGrid = paintings.slice(0, 6);
             <span class="text-[11px] tracking-[0.2em] uppercase opacity-80">Painter · Spain · est. 2018</span>
           </div>
 
-          <!-- H1: name first (SEO), then divider, then pull quote -->
+          <!-- H1: name first (SEO), then divider, then pull quote.
+               Per-character soft-blur-in on name, per-line mask-reveal-up on quote. -->
           <h1 class="font-display tracking-[-0.02em] uppercase leading-[0.86] mt-10 md:mt-0">
-            <span class="block text-[14vw] md:text-[5.6vw] lg:text-[5vw]">Vitaly</span>
-            <span class="block text-[14vw] md:text-[5.6vw] lg:text-[5vw]">Leshukov</span>
-            <span class="block w-12 h-px bg-ink/40 my-5 md:my-6" aria-hidden="true"></span>
-            <span class="block text-[7vw] md:text-[2.4vw] leading-[1.1] text-ink/80">
-              After the coma,<br />the only thing left<br />was color.
+            <span class="sr-only">Vitaly Leshukov. After the coma, the only thing left was color.</span>
+
+            <span class="block text-[14vw] md:text-[5.6vw] lg:text-[5vw] anim-line-mask" aria-hidden="true">
+              {heroName1.map((c, i) => (
+                <span class="anim-char inline-block whitespace-pre" style={`--i:${i}`}>{c}</span>
+              ))}
+            </span>
+            <span class="block text-[14vw] md:text-[5.6vw] lg:text-[5vw] anim-line-mask" aria-hidden="true">
+              {heroName2.map((c, i) => (
+                <span class="anim-char inline-block whitespace-pre" style={`--i:${i + heroName1.length}`}>{c}</span>
+              ))}
+            </span>
+
+            <span class="block w-12 h-px bg-ink/40 my-5 md:my-6 anim-divider" aria-hidden="true"></span>
+
+            <span class="block text-[7vw] md:text-[2.4vw] leading-[1.1] text-ink/80" aria-hidden="true">
+              {quoteLines.map((line, i) => (
+                <span class="block overflow-hidden">
+                  <span class="block anim-line" style={`--i:${i}`}>{line}</span>
+                </span>
+              ))}
             </span>
           </h1>
 
@@ -116,8 +140,13 @@ const featuredGrid = paintings.slice(0, 6);
           A 01 — Origins
         </span>
         <div class="col-span-12 md:col-span-8 md:col-start-4">
-          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] max-w-[14ch]">
-            From the<br />Urals to oil<br />on canvas
+          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] max-w-[14ch]" data-anim-h2>
+            <span class="sr-only">From the Urals to oil on canvas</span>
+            {["From the", "Urals to oil", "on canvas"].map((line, i) => (
+              <span class="block overflow-hidden" aria-hidden="true">
+                <span class="block anim-line" style={`--i:${i}`}>{line}</span>
+              </span>
+            ))}
           </h2>
           <div class="mt-10 md:mt-14 text-[16px] md:text-[18px] leading-[1.7] text-ink/85 max-w-2xl space-y-5">
             <p class="first-letter:font-display first-letter:text-7xl first-letter:float-left first-letter:leading-[0.9] first-letter:mr-3 first-letter:mt-1 first-letter:uppercase">
@@ -161,8 +190,13 @@ const featuredGrid = paintings.slice(0, 6);
           <span class="col-span-12 md:col-span-3 text-[11px] tracking-[0.2em] uppercase text-ink/60">
             A 02 — Featured Works
           </span>
-          <h2 class="col-span-12 md:col-span-7 font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92]">
-            Recent<br />paintings
+          <h2 class="col-span-12 md:col-span-7 font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92]" data-anim-h2>
+            <span class="sr-only">Recent paintings</span>
+            {["Recent", "paintings"].map((line, i) => (
+              <span class="block overflow-hidden" aria-hidden="true">
+                <span class="block anim-line" style={`--i:${i}`}>{line}</span>
+              </span>
+            ))}
           </h2>
           <a
             href="/gallery"
@@ -216,8 +250,11 @@ const featuredGrid = paintings.slice(0, 6);
           A 03 — Exhibitions
         </span>
         <div class="col-span-12 md:col-span-9">
-          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] mb-12 md:mb-16">
-            Shown at
+          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] mb-12 md:mb-16" data-anim-h2>
+            <span class="sr-only">Shown at</span>
+            <span class="block overflow-hidden" aria-hidden="true">
+              <span class="block anim-line" style="--i:0">Shown at</span>
+            </span>
           </h2>
           <ol class="border-t border-ink/15">
             {exhibitions.slice(0, 6).map((e) => (
@@ -248,8 +285,13 @@ const featuredGrid = paintings.slice(0, 6);
           A 04 — Contact
         </span>
         <div class="col-span-12 md:col-span-9">
-          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] max-w-[12ch]">
-            Acquire<br />or commission
+          <h2 class="font-display tracking-[-0.02em] uppercase text-[10vw] md:text-[5vw] leading-[0.92] max-w-[12ch]" data-anim-h2>
+            <span class="sr-only">Acquire or commission</span>
+            {["Acquire", "or commission"].map((line, i) => (
+              <span class="block overflow-hidden" aria-hidden="true">
+                <span class="block anim-line" style={`--i:${i}`}>{line}</span>
+              </span>
+            ))}
           </h2>
           <p class="mt-8 max-w-xl text-[16px] md:text-[18px] leading-[1.7] text-ink/80">
             Vitaly accepts a small number of commissions each year and works directly
@@ -306,22 +348,104 @@ const featuredGrid = paintings.slice(0, 6);
     filter: blur(0);
   }
 
-  /* === Reduced motion: kill it all === */
-  @media (prefers-reduced-motion: reduce) {
-    .marquee {
-      animation: none;
+  /* ============================================================
+     Text animations from animate-text skill
+     ============================================================ */
+
+  /* === soft-blur-in (per-character) — Apple-signature hero reveal ===
+     Spec: enter 900ms, stagger 25ms, ease cubic-bezier(0.22,1,0.36,1)
+           from { opacity:0, y:16px, blur:12px } to { 0,0,0 } */
+  @keyframes anim-char {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 16px, 0);
+      filter: blur(12px);
     }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      filter: blur(0);
+    }
+  }
+  .anim-char {
+    opacity: 0;
+    animation: anim-char 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 25ms);
+    will-change: opacity, transform, filter;
+  }
+  /* Mask the parent line to clip any sub-pixel bleed during blur */
+  .anim-line-mask {
+    overflow: hidden;
+    padding-bottom: 0.05em;
+    margin-bottom: -0.05em;
+  }
+
+  /* === mask-reveal-up (per-line) — used on quote + section H2s ===
+     Spec: enter 760ms, stagger 90ms, ease cubic-bezier(0.22,1,0.36,1)
+           from { opacity:0, y:30px, blur:6px } to { 0,0,0 } */
+  @keyframes anim-line {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 30px, 0);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+      filter: blur(0);
+    }
+  }
+  .anim-line {
+    opacity: 0;
+    animation: anim-line 760ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    /* Hero quote follows the name (~600ms) by default; section H2s reset this via the trigger */
+    animation-delay: calc(600ms + var(--i, 0) * 90ms);
+    will-change: opacity, transform, filter;
+  }
+
+  /* H2s start paused — wait for IntersectionObserver to flip a class */
+  [data-anim-h2] .anim-line {
+    animation-play-state: paused;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+  [data-anim-h2].is-animated .anim-line {
+    animation-play-state: running;
+  }
+
+  /* === Hero divider — small fade-in following the name === */
+  @keyframes anim-divider {
+    from { opacity: 0; transform: scaleX(0.2); }
+    to   { opacity: 1; transform: scaleX(1); }
+  }
+  .anim-divider {
+    transform-origin: left center;
+    opacity: 0;
+    animation: anim-divider 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 500ms;
+  }
+
+  /* === Reduced motion: hard-cut all === */
+  @media (prefers-reduced-motion: reduce) {
+    .marquee { animation: none; }
     [data-reveal] {
       opacity: 1;
       transform: none;
       filter: none;
       transition: none;
     }
+    .anim-char,
+    .anim-line,
+    .anim-divider {
+      opacity: 1;
+      transform: none;
+      filter: none;
+      animation: none;
+    }
   }
 </style>
 
 <script>
-  // === Reveal observer ===
+  // === Section reveal observer ===
   const revealEls = document.querySelectorAll<HTMLElement>("[data-reveal]");
   if (revealEls.length && "IntersectionObserver" in window) {
     const io = new IntersectionObserver(
@@ -338,6 +462,25 @@ const featuredGrid = paintings.slice(0, 6);
     revealEls.forEach((el) => io.observe(el));
   } else {
     revealEls.forEach((el) => el.classList.add("is-revealed"));
+  }
+
+  // === H2 mask-reveal-up trigger ===
+  const h2Els = document.querySelectorAll<HTMLElement>("[data-anim-h2]");
+  if (h2Els.length && "IntersectionObserver" in window) {
+    const h2io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-animated");
+            h2io.unobserve(e.target);
+          }
+        }
+      },
+      { threshold: 0.3, rootMargin: "0px 0px -8% 0px" },
+    );
+    h2Els.forEach((el) => h2io.observe(el));
+  } else {
+    h2Els.forEach((el) => el.classList.add("is-animated"));
   }
 
   // === Hero rotator ===
