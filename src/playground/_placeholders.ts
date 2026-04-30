@@ -21,7 +21,7 @@ const cdn = "https://cdn.prod.website-files.com/6625a5df3e3abfceb75b8e81";
 const _base: PlaceholderPainting[] = [
   {
     title: "Legends of the East — Be the Sun",
-    series: "Legends",
+    series: "Birth",
     year: 2024,
     width: 80, height: 80,
     medium: "Oil on canvas",
@@ -31,7 +31,7 @@ const _base: PlaceholderPainting[] = [
   },
   {
     title: "Against the Current — From a Dream to a Goal",
-    series: "Life In",
+    series: "Life In Water",
     year: 2024,
     width: 110, height: 280,
     medium: "Oil on canvas",
@@ -121,15 +121,16 @@ export const paintings: PlaceholderPainting[] = [
   ),
 ];
 
-// Series taxonomy — used by the gallery filter
+// Series taxonomy — matches the existing Webflow series, will be replaced
+// by Sanity's series collection once the CSV import lands.
 export const seriesList = [
-  { slug: "all",          label: "All works" },
-  { slug: "legends",      label: "Legends" },
-  { slug: "life-in",      label: "Life In" },
-  { slug: "goldfish",     label: "Goldfish" },
-  { slug: "dreams",       label: "Dreams" },
-  { slug: "birth",        label: "Birth" },
-  { slug: "naked-beauty", label: "Naked Beauty" },
+  { slug: "all",            label: "All works" },
+  { slug: "birth",          label: "Birth" },
+  { slug: "naked-beauty",   label: "Naked Beauty" },
+  { slug: "life-in",        label: "Life In" },
+  { slug: "life-in-water",  label: "Life In Water" },
+  { slug: "goldfish",       label: "Goldfish" },
+  { slug: "dreams",         label: "Dreams" },
 ];
 
 export const seriesSlug = (s: string) => s.toLowerCase().replace(/\s+/g, "-");
